@@ -14,7 +14,22 @@ def first_principles_logic(formula_or_concept, hobby=None):
         "a^2 + b^2 = c^2": "The square of the longest side of a right triangle is the sum of the squares of the other two sides.",
         "Torque": "Turning force depends on how hard you push and how far from the pivot you are."
     }
+    
+    # Use actual Greek characters for readability
+    greek_map = {
+        "omega": "ω",
+        "alpha": "α",
+        "theta": "θ",
+        "tau": "τ",
+        "phi": "φ",
+        "delta": "Δ"
+    }
+    
     base_truth = core_truths.get(formula_or_concept, f"Core Truth for '{formula_or_concept}': [Logic to be derived based on physical constraints]")
+    for name, char in greek_map.items():
+        base_truth = base_truth.replace(name, char)
+        
+    return base_truth
 
     if hobby:
         # Simple relatability filter for demonstration
