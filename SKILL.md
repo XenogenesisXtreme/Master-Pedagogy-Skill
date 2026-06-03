@@ -42,13 +42,23 @@ This skill implements a rigorous, multi-agent pedagogical framework designed to 
 - **Consistent Components**: Every sub-unit MUST include:
     1. **The Mission Log** (Narrative context)
     2. **First Principles Logic** (Core Truth + Analogy)
-    3. **Hybrid Formulas** (LaTeX + Plain English)
+    3. **The Formulas** (LaTeX + Plain English)
 - **Visual Spacing**: Use horizontal rules (`---`) to separate major sections. NEVER bunch content into a single paragraph.
 - **Quiz Formatting**: Quizzes MUST be clearly separated and formatted as follows:
     - Use a `### 📝 Interactive Quiz (Agent C)` heading.
     - Start with a **Scenario** in bold.
     - Use a numbered list for questions.
     - Ensure clear spacing between the scenario and the questions.
+    - **Example**:
+      ```markdown
+      ### 📝 Interactive Quiz (Agent C)
+      
+      **Scenario**: [Bolded description of the problem]
+      
+      1. [Question 1]
+      2. [Question 2]
+      3. [Question 3]
+      ```
 
 ### Formula Presentation
 - **Hybrid Approach**: Provide BOTH the formal textbook LaTeX and a "Plain English" translation for all key formulas. This ensures technical precision for exams and conceptual clarity for mastery.
