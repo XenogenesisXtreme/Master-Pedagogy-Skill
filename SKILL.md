@@ -37,13 +37,18 @@ This skill implements a rigorous, multi-agent pedagogical framework designed to 
 
 ## Formatting & Readability Standards
 
-### Structural Standards
+### Structural Standards (The "Fluid Mechanics" Gold Standard)
 - **Strict Sectioning**: Every lesson MUST be divided into clear sections using Markdown headings (e.g., `### Unit X`, `#### Sub-unit X.Y`).
 - **Consistent Components**: Every sub-unit MUST include:
     1. **The Mission Log** (Narrative context)
     2. **First Principles Logic** (Core Truth + Analogy)
     3. **Hybrid Formulas** (LaTeX + Plain English)
-- **Visual Spacing**: Use horizontal rules (`---`) to separate major sections and ensure the content is not "bunched up" in a single paragraph.
+- **Visual Spacing**: Use horizontal rules (`---`) to separate major sections. NEVER bunch content into a single paragraph.
+- **Quiz Formatting**: Quizzes MUST be clearly separated and formatted as follows:
+    - Use a `### 📝 Interactive Quiz (Agent C)` heading.
+    - Start with a **Scenario** in bold.
+    - Use a numbered list for questions.
+    - Ensure clear spacing between the scenario and the questions.
 
 ### Formula Presentation
 - **Hybrid Approach**: Provide BOTH the formal textbook LaTeX and a "Plain English" translation for all key formulas. This ensures technical precision for exams and conceptual clarity for mastery.
