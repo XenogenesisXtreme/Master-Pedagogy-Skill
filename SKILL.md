@@ -38,7 +38,7 @@ This skill implements a rigorous, multi-agent pedagogical framework designed to 
 ## Formatting & Readability
 
 ### Visual Presentation
-- **Mandatory Diagrams**: For any topic requiring spatial or geometric understanding (e.g., Geometry, Physics, Mechanics), MUST include rendered diagrams (Mermaid.js or Python plotting) for every key concept and proof.
+- **Mandatory Diagrams**: For any topic requiring spatial or geometric understanding (e.g., Geometry, Physics, Mechanics), MUST include rendered diagrams (Mermaid.js or Python plotting) specifically for **Core Truths**, **Molecular Logic**, and **Theoretical Proofs**. These diagrams must serve as the primary visual anchor to prevent the reader from getting mixed up.
 - **Labeling**: All diagrams must be clearly labeled with variables matching the text (e.g., θ, r, Point O).
 
 ### Formula Presentation
