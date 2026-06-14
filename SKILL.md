@@ -35,30 +35,11 @@ This skill implements a rigorous, multi-agent pedagogical framework designed to 
     2. If correct: Unlock the next unit with a 'Level Up' animation (text-based).
     3. If incorrect: Offer a 'Remedial Loop' (different explanation style + new question + hint).
 
-## Formatting & Readability Standards
+## Formatting & Readability
 
-### Structural Standards (The "Fluid Mechanics" Gold Standard)
-- **Strict Sectioning**: Every lesson MUST be divided into clear sections using Markdown headings (e.g., `### Unit X`, `#### Sub-unit X.Y`).
-- **Consistent Components**: Every sub-unit MUST include:
-    1. **The Mission Log** (Narrative context)
-    2. **First Principles Logic** (Core Truth + Analogy)
-    3. **The Formulas** (LaTeX + Plain English)
-- **Visual Spacing**: Use horizontal rules (`---`) to separate major sections. NEVER bunch content into a single paragraph.
-- **Quiz Formatting**: Quizzes MUST be clearly separated and formatted as follows:
-    - Use a `### 📝 Interactive Quiz (Agent C)` heading.
-    - Start with a **Scenario** in bold.
-    - Use a numbered list for questions.
-    - Ensure clear spacing between the scenario and the questions.
-    - **Example**:
-      ```markdown
-      ### 📝 Interactive Quiz (Agent C)
-      
-      **Scenario**: [Bolded description of the problem]
-      
-      1. [Question 1]
-      2. [Question 2]
-      3. [Question 3]
-      ```
+### Visual Presentation
+- **Mandatory Diagrams**: For any topic requiring spatial or geometric understanding (e.g., Geometry, Physics, Mechanics), MUST include rendered diagrams (Mermaid.js or Python plotting) for every key concept and proof.
+- **Labeling**: All diagrams must be clearly labeled with variables matching the text (e.g., θ, r, Point O).
 
 ### Formula Presentation
 - **Hybrid Approach**: Provide BOTH the formal textbook LaTeX and a "Plain English" translation for all key formulas. This ensures technical precision for exams and conceptual clarity for mastery.
@@ -69,9 +50,7 @@ This skill implements a rigorous, multi-agent pedagogical framework designed to 
 - **Inline Variables**: MUST use actual Unicode Greek characters (e.g., ω, α, θ, τ, Δ) instead of LaTeX code.
 - **Example**: 
   $$ \Delta P = \frac{2T}{R} $$
-  **Excess Pressure (ΔP) = 2 × Surface Tension (T) / Radius (R)**.
-
-### Narrative Consistency
+  **Excess Pressure (ΔP) = 2 × Surface Tension (T) / Radius (R)**.# Narrative Consistency
 - **Immersive Tone**: When a 'Narrative Quest' is chosen, maintain the theme throughout all sub-units, quizzes, and feedback.
 - **Character Integration**: Refer to the user by their chosen role (e.g., Tactical Engineer, Grandmaster) and integrate the **current learner's specific hobbies** into the story's obstacles and analogies. Always ask for the learner's hobbies at the start of a new chapter.
 
@@ -103,3 +82,5 @@ Upon completion of a full chapter, autonomously generate:
 2. Invoke `scripts/logic_engine.py` to generate the initial Curriculum Mind Map and apply the Relatability Filter.
 3. Follow the Agent A -> B -> C loop strictly, with Agent D managing XP and Leveling.
 4. Use `scripts/quiz_module.py` for all assessments, including XP rewards and Support Mode.
+
+
