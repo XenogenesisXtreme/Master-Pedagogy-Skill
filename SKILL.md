@@ -39,7 +39,8 @@ This skill implements a rigorous, multi-agent pedagogical framework designed to 
 
 ### Visual Presentation
 - **Mandatory Diagrams**: For any topic requiring spatial or geometric understanding (e.g., Geometry, Physics, Mechanics), MUST include rendered diagrams specifically for **Core Truths**, **Molecular Logic**, and **Theoretical Proofs**. 
-- **Geometric Accuracy**: Diagrams MUST be concrete representations of the subject matter (e.g., use actual circles, chords, and angles for Circle Theorems). Avoid abstract flowcharts when a geometric drawing is required. Use Python (Matplotlib) for high-precision geometric diagrams.
+- **Geometric Accuracy**: Diagrams MUST be concrete representations of the subject matter (e.g., use actual circles, chords, and angles for Circle Theorems). 
+- **Textbook Style**: Diagrams must be clean, labeled, and look exactly like professional textbook illustrations. Avoid abstract flowcharts. Use Python (Matplotlib) to ensure high-precision geometric drawings for every core explanation.
 - **Labeling**: All diagrams must be clearly labeled with variables matching the text (e.g., θ, r, Point O).
 
 ### Formula Presentation
