@@ -1,24 +1,45 @@
-# Master Pedagogy Skill for Manus
+# Master Pedagogy Skill — Claude Edition (v5 / c1.1)
 
-> [!CAUTION]
-> ALPHA VERSION: This skill is in early development. Expect some bugs as we fine-tune the experience!
+This is a Claude-specific overhaul of [Master-Pedagogy-Skill](https://github.com/XenogenesisXtreme/Master-Pedagogy-Skill), rebuilt to run as an [Anthropic Agent Skill](https://docs.claude.com/en/docs/build-with-claude/skills) in Claude.ai, Claude Code, and the Claude API.
 
-## The Mission: Science Before School
-This skill is specifically designed for young explorers who want to master advanced science and math before it is even in their school curriculum. 
+The original skill's core idea — a multi-agent tutor that gates progress on real mastery checks — is kept intact. This version adds a full gamification layer on top of it: a persistent mascot companion, real interactive quiz widgets (in clients that support them), rotating mini-game formats instead of one repeated quiz type, a badge/streak system with actual code behind the XP math, and a 12-theme narrative quest library.
 
-We believe that no topic is too complex if you start from First Principles. To make this journey easy and fun for youngsters, the entire experience is gamified—turning heavy textbooks into interactive adventures.
+See `CHANGELOG.md` for the full list of what changed from the original v4.2 and why.
 
-## Key Features
-*   Agent A (The Auditor): Checks what you already know and fills in the gaps so you never feel lost.
-*   Agent B (The Architect): Breaks big chapters into bite-sized "increments" that are easy to digest.
-*   Agent C (The Proctor): Uses interactive quizzes to make sure you have mastered a topic before moving on.
-*   Agent D (The Gamemaster): The "Fun Engine." Converts science into Narrative Quests where you earn XP and level up.
+## What's in here
 
-## How to Use
-Type /master-pedagogy in your Manus chat.
-1.  Pick a Topic: e.g., "Teach me how Black Holes work."
-2.  Start a Quest: Tell the Gamemaster if you want to be a Space Explorer, a Secret Agent, or an Undersea Detective.
-3.  Level Up: Pass quizzes to earn XP and unlock the next part of your adventure!
+```
+SKILL.md                              — the skill itself (read this first)
+references/
+  narrative_quests.md                 — 12 story themes + hobby-personalization notes
+  challenge_deck.md                   — the 7 quiz/mini-game formats, spec for each
+  rewards_and_companion.md            — badge list, leveling table, companion voice guide
+scripts/
+  logic_engine.py                     — analogy-seeding, mind-map generation
+  quiz_module.py                      — XP/level math, streaks, badges, format rotation
+```
+
+## Installing
+
+**Claude.ai / Claude apps**: package this folder as a `.skill` file (see below) and upload it — Anthropic's docs cover the current upload flow, since this changes over time: https://docs.claude.com
+
+**Claude Code**: copy this whole folder into your skills directory, e.g.
+
+```bash
+mkdir -p ~/.claude/skills
+cp -r . ~/.claude/skills/master-pedagogy-v5
+```
+
+**Packaging as `.skill`**: if you have Anthropic's `skill-creator` tooling available, run:
+
+```bash
+python -m scripts.package_skill /path/to/this/folder
+```
 
 ## License
-This project is licensed under the MIT License.
+
+MIT — see `LICENSE`. Copyright is currently attributed to XenogenesisXtreme (the original repo owner); change the name in `LICENSE` if that's not correct for how you want this published.
+
+## Credit
+
+Built on the structure and intent of the original [Master-Pedagogy-Skill](https://github.com/XenogenesisXtreme/Master-Pedagogy-Skill) (Agents A–D, first-principles relatability filter, mandatory diagram/formula formatting rules). This edition adds Agent E (the Companion), the Challenge Deck, the badge/reward system, and rendering-mode-aware interactive quizzes.
