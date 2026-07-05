@@ -85,3 +85,51 @@ Pick the theme that best matches the learner's stated interest when they choose 
 When offering choices, don't dump all 12 — surface 3-4 that plausibly fit the stated hobby and subject, plus "surprise me" and "just the standard tutorial, no story." Example offer for a learner who said "guitar" learning circular motion:
 
 > "Want a story wrapped around this? A few that'd fit: **Startup** (you're building a music app and the physics engine needs this), **Time Loop** (you keep replaying a gig that goes wrong at the same moment), or **Space Mission** (ship's comms array is a giant rotating dish). Or we skip the story and go straight tutorial — your call."
+---
+
+## XG Edition: How New Mechanics Integrate with Narrative Quests
+
+### Combo System
+In any quest, combo activation is framed as momentum in the story:
+- **Space Mission**: "Systems responding well — we've got momentum on our side."
+- **Detective**: "The pieces are clicking together. Don't lose this thread."
+- **Heist**: "Timing's perfect. Keep this pace and the vault's ours."
+- **Fantasy Kingdom**: "The Grandmaster is watching. Your rhythm is impressive."
+- **Escape Room**: "You're on a roll — three locks in a row, all fast."
+
+### Speedrun Challenges
+Speedrun offers are framed as "risk vs. reward" moments within the narrative:
+- **Space Mission**: "The window's narrow — clear this calibration in 60s and we gain an hour of margin."
+- **Heist**: "Guard rotation gives you 60 seconds. Can you bypass this lock before they return?"
+- **Escape Room**: "The timer's already running. Beat 60s and the door unlocks faster."
+
+### Branching Paths
+The Choice Point is framed differently per quest theme:
+- **Space Mission**: "Before we recalibrate: analyze the data deeper (Go Deeper), run a field test (Apply It), or lock in and proceed (Power On)."
+- **Detective**: "Before we follow this lead: dig into the evidence (Go Deeper), interview a witness (Apply It), or move to the next clue (Power On)."
+- **Heist**: "Before we crack this: study the mechanism (Go Deeper), test it on a decoy (Apply It), or move to the next vault door (Power On)."
+- **Fantasy Kingdom**: "Before the next trial: study the ancient texts (Go Deeper), spar with an ally to test it (Apply It), or face the next trial (Power On)."
+
+### Scientist Cards
+Scientist Cards are woven into the narrative as "archived knowledge" or "transmissions from the past":
+- **Space Mission**: "Transmission received from [name]'s historical archive. Their work is the foundation we're standing on right now."
+- **Detective**: "A name from the case files — [name] cracked this decades ago. Worth knowing before you move forward."
+- **Fantasy Kingdom**: "The Grandmaster's library holds a record of [name]. Their discovery echoes through this trial."
+
+### Boss Rematches
+Framed as "returning to a past failure with new strength":
+- **Space Mission**: "That system malfunctioned on mission day 3. We've got the parts to fix it properly now."
+- **Detective**: "That clue stumped us back in Chapter 2. With what we know now, we can crack it."
+- **Heist**: "That lock broke our last team. You're not the same person who faced it before."
+- **Time Loop**: "This is the same moment we've been stuck in — but you're different now. The loop might finally break."
+
+### Unlockable Lore
+Each quest theme has a "lore archive" that unlocks as sub-units are cleared:
+- **Space Mission**: Mission logs from previous expeditions, declassified research notes
+- **Detective**: Cold case files, witness testimonies, forensic reports
+- **Heist**: Blueprints, security protocols, historical heist records
+- **Fantasy Kingdom**: Ancient scrolls, prophecies, bestiary entries
+- **Esports**: Match replays, strategy guides, player profiles
+- **Startup**: Market research, competitor analyses, product roadmaps
+
+The Companion drops hints about upcoming lore unlocks: "There's something in the archives waiting to be found..."
