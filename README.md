@@ -4,6 +4,8 @@ This is a Claude-specific overhaul of [Master-Pedagogy-Skill](https://github.com
 
 The original skill's core idea — a multi-agent tutor that gates progress on real mastery checks — is kept intact. This version adds a full gamification layer on top of it: a persistent mascot companion, real interactive quiz widgets (in clients that support them), rotating mini-game formats instead of one repeated quiz type, a badge/streak system with actual code behind the XP math, a 12-theme narrative quest library, and — in c1.2 — a suite of game-mechanic inspirations: combo multipliers, branching story paths, timed speedruns, Scientist/Explorer Character Cards, Socratic "Show Me the Why" mode, cross-chapter Boss Rematches, and a visual skill-tree progression map.
 
+PS: Use this skill in chat, avoid using it over many chats, it just runs better in one chat
+
 See `CHANGELOG.md` for the full list of what changed from the original v4.2 and why.
 
 ---
