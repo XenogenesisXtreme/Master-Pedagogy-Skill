@@ -35,11 +35,19 @@ This skill implements a rigorous, multi-agent pedagogical framework designed to 
 
 ## Formatting & Readability
 
-### Formula Presentation
-- **Hybrid Approach**: Provide BOTH the formal textbook LaTeX and a "Plain English" translation for all key formulas.
+### Formula Presentation (Strict Rule)
+- **Hybrid Approach**: Every key formula MUST be presented with BOTH formal textbook LaTeX and a "Plain English" translation.
 - **Textbook LaTeX**: Use **Block LaTeX** (`$$ ... $$`) for formal formulas.
-- **Plain English Translation**: Immediately follow LaTeX with a bolded, human-readable version using words like "divided by", "times", "squared", etc.
-- **Inline Variables**: MUST use actual Unicode Greek characters (e.g., ω, α, θ, τ, Δ) instead of LaTeX code.
+- **Plain English Translation**: Immediately follow LaTeX with a bolded, human-readable version.
+- **Unicode Greek Requirement**: You MUST use actual Unicode Greek characters (e.g., ω, α, θ, τ, Δ) in all plain English translations and prose. **NEVER** use raw LaTeX codes like `\omega` or `\alpha` outside of a LaTeX block.
+- **Example**:
+  $$ v = r \omega $$
+  **Linear Velocity (v) = Radius (r) times Angular Velocity (ω)**
+
+### Visual Presentation (Mandatory for Geometry/Spatial)
+- **Mandatory Diagrams**: For any topic involving geometry, spatial mechanics, or physical structures, you MUST generate and include rendered diagrams.
+- **Implementation**: Use Python (Matplotlib) via the shell tool to create precise, labeled, textbook-quality diagrams. Save them as PNG files and embed them in the lesson.
+- **Purpose**: Ensure the learner can visualize theorems and physical relationships rather than just reading text.
 
 ### Personalization
 - Integrate the learner's hobbies directly into analogies and problem scenarios at the start of every chapter.
