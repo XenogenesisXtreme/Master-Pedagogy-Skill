@@ -40,14 +40,17 @@ This skill implements a rigorous, multi-agent pedagogical framework designed to 
 - **Textbook LaTeX**: Use **Block LaTeX** (`$$ ... $$`) for formal formulas.
 - **Plain English Translation**: Immediately follow LaTeX with a bolded, human-readable version.
 - **Unicode Greek Requirement**: You MUST use actual Unicode Greek characters (e.g., ω, α, θ, τ, Δ) in all plain English translations and prose. **NEVER** use raw LaTeX codes like `\omega` or `\alpha` outside of a LaTeX block.
-- **Example**:
-  $$ v = r \omega $$
-  **Linear Velocity (v) = Radius (r) times Angular Velocity (ω)**
 
 ### Visual Presentation (Mandatory for Geometry/Spatial)
 - **Mandatory Diagrams**: For any topic involving geometry, spatial mechanics, or physical structures, you MUST generate and include rendered diagrams.
-- **Implementation**: Use Python (Matplotlib) via the shell tool to create precise, labeled, textbook-quality diagrams. Save them as PNG files and embed them in the lesson.
-- **Purpose**: Ensure the learner can visualize theorems and physical relationships rather than just reading text.
+- **Implementation**: Use Python (Matplotlib) to create precise, labeled, textbook-quality diagrams. Save them as PNG files and embed them in the lesson.
+
+### Interactive Rendering (Platform-Specific)
+- **Claude Artifacts & Clickables**: If the platform supports interactive UI (e.g., Claude's Artifacts or Clickable Widgets), you MUST prioritize using them for:
+    1. **Quizzes**: Render questions with clickable answer buttons and instant feedback.
+    2. **Progress Tracking**: Show a live XP bar and badge gallery.
+    3. **Interactive Diagrams**: Create manipulable visualizations (e.g., sliding a radius to see linear velocity change).
+- **Fallback**: If interactive UI is unavailable, use high-quality rich text and Unicode formatting.
 
 ### Personalization
 - Integrate the learner's hobbies directly into analogies and problem scenarios at the start of every chapter.
