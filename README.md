@@ -1,4 +1,4 @@
-# Master Pedagogy Skill  (v5 / c1.2 — Extended Gamification Edition)
+# Master Pedagogy Skill  (v5 / c2.3 — Miscellaneous Changes)
 
 This is a Claude-specific overhaul of [Master-Pedagogy-Skill](https://github.com/XenogenesisXtreme/Master-Pedagogy-Skill), rebuilt to run as an [Anthropic Agent Skill](https://docs.claude.com/en/docs/build-with-claude/skills) in Claude.ai, Claude Code, and the Claude API. Works in Manus, but not all features are present.
 
