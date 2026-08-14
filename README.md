@@ -6,7 +6,7 @@ The original skill's core idea — a multi-agent tutor that gates progress on re
 
 PS: 1.Use this skill in chat, avoid using it over many chats, it just runs better in one chat
     
-    2.Website coming soon! (Will paste link here once fully created)
+    2.Website coming soon! (https://gamifiedlearn-5vbwad52.manus.space/)
 
 See `CHANGELOG.md` for the full list of what changed from the original v4.2 and why.
 
