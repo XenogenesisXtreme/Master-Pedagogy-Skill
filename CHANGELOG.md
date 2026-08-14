@@ -1,5 +1,30 @@
 # Changelog
 
+## v5 / c2.3 — Conditional Hobby-Based Analogy Rules
+
+This release updates the Master Pedagogy skill with mode-aware personalization, stronger first-principles learning workflows, and expanded interactive learning mechanics.
+
+### Added
+
+- **Conditional hobby personalization** — Standard Tutorial and Narrative Quest now require the learner to provide a hobby or interest before teaching begins; the skill uses it for analogies, examples, memory hooks, obstacles, and feedback.
+- **FHP Mode exception** — Floathead Physics Mode does not require a hobby question or interrupt first-principles reconstruction. A volunteered interest may be used only when it supports the derivation.
+- **Learning modes** — Added Standard Tutorial, Narrative Quest, and rigorous, time-intensive Floathead Physics Mode with explicit confirmation.
+- **Branching Paths** — Added the post-quiz Go Deeper, Apply It, and Power On choice point.
+- **Socratic “Show Me the Why” Mode** — Added three-to-five-step Prediction Market chains, mastery scoring, Remedial Loop behavior, and the Curious Mind badge.
+- **Scientist / Explorer Character Cards** — Added the five-field card format, collection mechanic, Companion recap, and card-generation helper guidance.
+- **Interactive rendering guidance** — Added Rich Mode/Text Mode rules, interactive-first visualizations, Claude Artifact guidance, and Manus dashboard/artifact guidance.
+- **Skill-tree and adaptive-learning support** — Added skill-tree generation, combo handling, spaced review, Boss Rematches, Revenge badge variants, and Socratic-chain helpers.
+
+### Changed
+
+- Expanded Session Setup, Agent A → B → C → D workflows, visual standards, formula presentation, narrative consistency, and chapter deliverables.
+- Expanded the Chapter Trophy Card to include combo records and Scientist Cards, with mind-map, skill-tree, and Command Center refresh behavior.
+- Clarified that website, README, deployment, branch, and export changes are outside the scope of this skill update.
+
+### Unchanged
+
+- The core mastery gate, prerequisite audit, remedial feedback, and adaptive assessment principles remain in place.
+
 ## v5 / c1.1 — Claude Edition (this version)
 
 Full gamification/engagement overhaul on top of the original v4.2 structure. Mastery gating (Agent A → B → C) and the diagram/formula formatting rules are unchanged — everything below is additive or a replacement of the "fun" layer specifically.
