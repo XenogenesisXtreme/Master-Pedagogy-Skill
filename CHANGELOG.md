@@ -1,6 +1,6 @@
 # Changelog
 
-## v5 / c2.3 — Conditional Hobby-Based Analogy Rules
+## v5 / c2.3 — Conditional Hobby-Based Analogy Rules (Current Version)
 
 This release updates the Master Pedagogy skill with mode-aware personalization, stronger first-principles learning workflows, and expanded interactive learning mechanics.
 
@@ -25,7 +25,7 @@ This release updates the Master Pedagogy skill with mode-aware personalization, 
 
 - The core mastery gate, prerequisite audit, remedial feedback, and adaptive assessment principles remain in place.
 
-## v5 / c1.1 — Claude Edition (this version)
+## v5 / c1.1 — Claude Edition 
 
 Full gamification/engagement overhaul on top of the original v4.2 structure. Mastery gating (Agent A → B → C) and the diagram/formula formatting rules are unchanged — everything below is additive or a replacement of the "fun" layer specifically.
 
