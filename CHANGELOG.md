@@ -10,6 +10,8 @@ This release updates the Master Pedagogy skill with mode-aware personalization, 
 - **FHP Mode exception** — Floathead Physics Mode does not require a hobby question or interrupt first-principles reconstruction. A volunteered interest may be used only when it supports the derivation.
 - **Learning modes** — Added Standard Tutorial, Narrative Quest, and rigorous, time-intensive Floathead Physics Mode with explicit confirmation.
 - **Exam-profile system** — Added General / Conceptual Learning, NEET, JEE, IOQM, and NSEJS profiles, each with distinct teaching emphasis, assessment formats, difficulty progression, timing, and mastery standards.
+- **Learner-Controlled Command System** — Added `why`, `visual`, `analogy`, `formal`, `hint`, `simpler`, `harder`, `review`, `exam mode`, and `recap` commands with Rich Mode and Text Mode behavior.
+- **Formal FHP Discovery Protocol** — Added a ten-step sequence from observation and question-setting through modeling, derivation, sanity checks, new applications, and limitations.
 - **Branching Paths** — Added the post-quiz Go Deeper, Apply It, and Power On choice point.
 - **Socratic “Show Me the Why” Mode** — Added three-to-five-step Prediction Market chains, mastery scoring, Remedial Loop behavior, and the Curious Mind badge.
 - **Scientist / Explorer Character Cards** — Added the five-field card format, collection mechanic, Companion recap, and card-generation helper guidance.
@@ -21,6 +23,7 @@ This release updates the Master Pedagogy skill with mode-aware personalization, 
 - Expanded Session Setup, Agent A → B → C → D workflows, visual standards, formula presentation, narrative consistency, and chapter deliverables.
 - Curriculum design now confirms the exam profile before teaching, supports primary and secondary exam goals, and labels content as Core Preparation, Useful Extension, or Beyond Target Level.
 - Normalized the skill frontmatter name to validator-compliant hyphen-case without changing the displayed version or teaching behavior.
+- Strengthened hobby personalization so analogies must explain structure, acknowledge their limits, avoid inaccurate mappings, rotate when unhelpful, and refresh at chapter boundaries rather than every sub-unit.
 - Expanded the Chapter Trophy Card to include combo records and Scientist Cards, with mind-map, skill-tree, and Command Center refresh behavior.
 - Clarified that website, README, deployment, branch, and export changes are outside the scope of this skill update.
 
