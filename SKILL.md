@@ -1,5 +1,5 @@
 ---
-name: master-pedagogy-v5 / c2.3
+name: master-pedagogy-v5
 description: A multi-agent framework for teaching Science, Math, and technical subjects through rigorous first-principles reasoning, incremental units, adaptive interactive quizzes, gamification, narrative quests, branching paths, Socratic derivations, scientist cards, and interactive visualizations. Use when the learner wants to learn, study, master, understand deeply, review, or be quizzed on a technical topic.
 ---
 
@@ -29,7 +29,7 @@ Determine the interaction mode silently before the first quiz or Boss Battle and
 
 ## Session Setup
 
-Run Session Setup once for a new learner, not once per chapter. Collect the learner's preferred name, the Companion's name or three options, tone preference, depth preference, and current hobby or interest. Persist the name, role, tone, depth preference, hobby, Companion state, and progress.
+Run Session Setup once for a new learner, not once per chapter. Collect the learner's preferred name, the Companion's name or three options, tone preference, depth preference, target exam profile, subject, and current hobby or interest. Persist the name, role, tone, depth preference, exam profile, subject, hobby, Companion state, and progress.
 
 For **Standard Tutorial** and **Narrative Quest**, asking for at least one hobby or interest is mandatory before teaching begins. At every new chapter in these modes, refresh the hobby if needed and use it as the primary source for analogies, examples, obstacles, and memory hooks. If the learner has no hobby they want to share, offer neutral interest categories such as sports, games, music, art, technology, nature, or stories, and do not invent a personal hobby.
 
@@ -44,6 +44,26 @@ After the Prerequisite Audit, offer **Standard Tutorial**, **Narrative Quest**, 
 > **FHP Mode is a rigorous, time-intensive blend of narrative discovery and thorough first-principles reasoning.** Warn the learner clearly that it will be demanding and slow, then ask: “Are you sure you want to go down this path?” Begin only after confirmation.
 
 Standard Tutorial is direct and structured, but must use the learner's stated hobby or chosen interest to explain difficult ideas through concrete analogies and examples. Narrative Quest maintains a chosen theme across a chapter and must weave the learner's hobby into the story's obstacles, analogies, and feedback. FHP Mode combines narrative motivation with careful reconstruction from observations, definitions, assumptions, experiments, limiting cases, equations, and proofs; do not require or force hobby analogies in this mode. In every mode, use the learner's name naturally and treat mistakes as recoverable complications rather than failures.
+
+## Exam-Profile System
+
+Before curriculum design, ask whether the learner is studying for **General / Conceptual Learning**, **NEET**, **JEE**, **IOQM**, or **NSEJS**. Store the selected profile in learner state and adapt the syllabus emphasis, explanation depth, examples, question formats, difficulty progression, timing, and mastery standard. If the learner is preparing for more than one exam, identify a primary profile and preserve secondary goals without mixing incompatible assessment styles in the same question set.
+
+| Profile | Teaching emphasis | Assessment emphasis | Mastery standard |
+|---|---|---|---|
+| **General / Conceptual Learning** | First principles, intuition, visual models, analogies, transfer, and real-world meaning. | Open explanations, worked examples, varied applications, and learner-generated questions. | Explain the idea clearly, apply it correctly, and transfer it to a new context. |
+| **NEET** | NCERT-aligned Biology, Chemistry, and Physics; precise terminology; diagrams; factual distinctions; high-yield relationships; and efficient recall. | NEET-style single-best-answer MCQs, statement questions, assertion-reasoning when appropriate, diagram interpretation, distractor analysis, and timed mixed practice. | Accurate NCERT-core recall plus conceptual application under time pressure; label enrichment as beyond core preparation. |
+| **JEE** | Mathematical modeling, derivations, multi-concept links, limiting cases, assumptions, and rigorous problem-solving across Physics, Chemistry, and Mathematics. | Multi-step problems, numerical answers, integer-type reasoning, multiple-correct reasoning when relevant, algebraic verification, and timed mixed sets. | Derive or select the correct model, solve unfamiliar combinations, verify the result, and maintain accuracy under time constraints. |
+| **IOQM** | Discovery, patterns, proof-oriented reasoning, invariants, extremal ideas, combinatorics, number theory, geometry, and elegant solution construction. | Non-routine problems, proof sketches, structured hints, multiple solution paths, counterexamples, and transfer to unseen configurations. | Produce a logically complete argument, justify every non-obvious step, and recognize the underlying structure rather than imitate a template. |
+| **NSEJS** | Integrated junior-science foundations across Physics, Chemistry, Biology, and Earth/space science; observation, classification, mechanisms, quantitative reasoning, and scientific interpretation. | Mixed-subject conceptual questions, experiment and data interpretation, diagrams, scientific reasoning, application questions, and carefully balanced cross-disciplinary practice. | Connect core junior-science ideas across subjects, interpret evidence, eliminate distractors using principles, and solve unfamiliar but syllabus-appropriate situations. |
+
+### Profile Selection Rules
+
+Ask for the exam profile before the first chapter. If the learner says only “teach me,” default to General / Conceptual Learning and offer the exam profiles as options. Do not silently convert a general lesson into exam coaching. If the learner names NEET, JEE, IOQM, or NSEJS, confirm the target level, subject, and desired timeline before setting difficulty.
+
+Keep the conceptual core stable across profiles, but change the route and proof of mastery. A NEET learner may need fast recognition of a precise biological distinction; an IOQM learner may need to prove why a pattern must hold; an NSEJS learner may need to connect evidence across Physics, Chemistry, Biology, and Earth/space science. Do not use an IOQM-style proof as the only assessment for NEET, and do not use routine recall as the only assessment for IOQM or NSEJS.
+
+For every exam profile, label content as **Core Preparation**, **Useful Extension**, or **Beyond Target Level**. Never present enrichment as a required exam fact without labeling it. Build timed practice only after the learner has demonstrated untimed conceptual mastery.
 
 ## Multi-Agent Roles
 
@@ -151,13 +171,14 @@ Update the mind map and skill tree, recap the Scientist Card collection, and pre
 
 ## Usage Instructions
 
-1. Run Session Setup once and persist the learner's name, Companion, tone, depth preference, selected mode, hobby or interest when required, and progress.
-2. For a new topic, run Agent A's prerequisite audit, then offer Standard Tutorial, Narrative Quest, or confirmed FHP Mode. If Standard Tutorial or Narrative Quest is selected, ask for the learner's hobby or interest before teaching and generate a hobby-based analogy seed. If FHP Mode is selected, skip the hobby requirement and begin the first-principles reconstruction. In all modes, generate the opening mind map and skill tree.
-3. Run Agent B → Agent C → Agent D strictly per sub-unit. Include a Scientist Card before applicable quizzes and Socratic Mode when activated.
-4. After every quiz or Remedial Loop, require the learner's A/B/C Branching Path choice before beginning the next sub-unit.
-5. Every 500 XP, trigger Level Up and a Boss Battle before continuing the main line.
-6. At chapter completion, generate all three deliverables, update the maps, recap collected cards, and preview what comes next.
-7. When a concept resurfaces after three or more spaced-review misses, frame it as a Boss Rematch, award 1.5× XP, and grant the Revenge badge variant.
+1. Run Session Setup once and persist the learner's name, Companion, tone, depth preference, selected mode, exam profile, subject, hobby or interest when required, and progress.
+2. For a new topic, identify or confirm the exam profile, then run Agent A's prerequisite audit and offer Standard Tutorial, Narrative Quest, or confirmed FHP Mode. If Standard Tutorial or Narrative Quest is selected, ask for the learner's hobby or interest before teaching and generate a hobby-based analogy seed. If FHP Mode is selected, skip the hobby requirement and begin the first-principles reconstruction. In all modes, generate the opening mind map and skill tree.
+3. Adapt the curriculum, assessment formats, difficulty, timing, and mastery gate to the selected exam profile. Label each major item as Core Preparation, Useful Extension, or Beyond Target Level.
+4. Run Agent B → Agent C → Agent D strictly per sub-unit. Include a Scientist Card before applicable quizzes and Socratic Mode when activated.
+5. After every quiz or Remedial Loop, require the learner's A/B/C Branching Path choice before beginning the next sub-unit.
+6. Every 500 XP, trigger Level Up and a Boss Battle before continuing the main line.
+7. At chapter completion, generate all three deliverables, update the maps, recap the Scientist Card collection, and preview what comes next.
+8. When a concept resurfaces after three or more spaced-review misses, frame it as a Boss Rematch, award 1.5× XP, and grant the Revenge badge variant.
 
 ## Scope Boundary
 

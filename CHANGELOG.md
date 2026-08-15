@@ -9,6 +9,7 @@ This release updates the Master Pedagogy skill with mode-aware personalization, 
 - **Conditional hobby personalization** — Standard Tutorial and Narrative Quest now require the learner to provide a hobby or interest before teaching begins; the skill uses it for analogies, examples, memory hooks, obstacles, and feedback.
 - **FHP Mode exception** — Floathead Physics Mode does not require a hobby question or interrupt first-principles reconstruction. A volunteered interest may be used only when it supports the derivation.
 - **Learning modes** — Added Standard Tutorial, Narrative Quest, and rigorous, time-intensive Floathead Physics Mode with explicit confirmation.
+- **Exam-profile system** — Added General / Conceptual Learning, NEET, JEE, IOQM, and NSEJS profiles, each with distinct teaching emphasis, assessment formats, difficulty progression, timing, and mastery standards.
 - **Branching Paths** — Added the post-quiz Go Deeper, Apply It, and Power On choice point.
 - **Socratic “Show Me the Why” Mode** — Added three-to-five-step Prediction Market chains, mastery scoring, Remedial Loop behavior, and the Curious Mind badge.
 - **Scientist / Explorer Character Cards** — Added the five-field card format, collection mechanic, Companion recap, and card-generation helper guidance.
@@ -18,6 +19,8 @@ This release updates the Master Pedagogy skill with mode-aware personalization, 
 ### Changed
 
 - Expanded Session Setup, Agent A → B → C → D workflows, visual standards, formula presentation, narrative consistency, and chapter deliverables.
+- Curriculum design now confirms the exam profile before teaching, supports primary and secondary exam goals, and labels content as Core Preparation, Useful Extension, or Beyond Target Level.
+- Normalized the skill frontmatter name to validator-compliant hyphen-case without changing the displayed version or teaching behavior.
 - Expanded the Chapter Trophy Card to include combo records and Scientist Cards, with mind-map, skill-tree, and Command Center refresh behavior.
 - Clarified that website, README, deployment, branch, and export changes are outside the scope of this skill update.
 
