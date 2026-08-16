@@ -94,6 +94,24 @@ Once activated, the session follows this flow:
 5. **Boss Battles** — Every 500 XP triggers a level-up and a Boss Battle (a multi-step, real-world application problem).
 6. **Chapter Deliverables** — On completion: Cheat Sheet, Problem Set, and Trophy Card (with Scientist Card collection recap).
 
+### LearnerState
+
+The skill maintains one canonical **`LearnerState`** record across sessions and chapters. It keeps learner preferences, exam goals, conceptual mastery, misconceptions, review scheduling, gamification, session continuity, and accessibility preferences in one structured state rather than scattering them across narrative messages or quiz results.
+
+> `LearnerState` is the skill’s state-management specification. A deployed application still needs a storage layer—such as a database, local file, or session store—to persist the record between sessions.
+
+| State area | What it tracks |
+|---|---|
+| **Identity and preferences** | Preferred name, Companion, tone, depth, language, pacing, rendering, accessibility, and narrative preferences. |
+| **Learning context** | Learning mode, primary and secondary exam profiles, subject, topic, chapter, sub-unit, hobby, and hobby consent. |
+| **Mastery** | Concept status, confidence, evidence, prerequisites, misconceptions, fragile concepts, and current mastery gate. |
+| **Progress** | XP, level, title, streak, combo, badges, Scientist Cards, and completed chapters. |
+| **Review and continuity** | Review queue, scheduled reviews, Boss Rematches, last activity, pause point, pending choices, and pending confirmations. |
+
+The state updates after meaningful events such as session setup, profile selection, prerequisite audits, explanations, learner commands, quiz attempts, Remedial Loops, branch choices, reviews, level-ups, badge awards, chapter completion, pauses, and resumes. Conceptual mastery is kept separate from XP and badges: rewards represent engagement, while mastery requires evidence through explanation, application, derivation, proof, diagrams, or timed performance.
+
+When a learner changes an exam profile, hobby, mode, or depth preference, the skill changes the teaching route without erasing previous learning. On return, it resumes from the earliest unresolved prerequisite, mastery gate, pending confirmation, or choice point. Commands such as `recap`, `review`, `exam mode`, and `simpler` read from the state and update it when appropriate, but cannot bypass mastery, safety, or confirmation requirements.
+
 ### Rendering Modes
 
 The skill detects Manus's capabilities automatically:
