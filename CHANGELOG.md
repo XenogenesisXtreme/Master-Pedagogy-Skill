@@ -17,6 +17,7 @@ This release updates the Master Pedagogy skill with mode-aware personalization, 
 - **Socratic “Show Me the Why” Mode** — Added three-to-five-step Prediction Market chains, mastery scoring, Remedial Loop behavior, and the Curious Mind badge.
 - **Scientist / Explorer Character Cards** — Added the five-field card format, collection mechanic, Companion recap, and card-generation helper guidance.
 - **Interactive rendering guidance** — Added Rich Mode/Text Mode rules, interactive-first visualizations, Claude Artifact guidance, and Manus dashboard/artifact guidance.
+- **Rendered visual artifacts** — Strengthened diagram rules so applicable physics, mathematics, geometry, motion, force, graph, molecular, and structural explanations must present an actual checked Matplotlib or equivalent visual artifact when rendering is available; ASCII is a fallback only.
 - **Skill-tree and adaptive-learning support** — Added skill-tree generation, combo handling, spaced review, Boss Rematches, Revenge badge variants, and Socratic-chain helpers.
 
 ### Changed
