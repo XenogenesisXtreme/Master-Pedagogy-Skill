@@ -13,6 +13,7 @@ This release updates the Master Pedagogy skill with mode-aware personalization, 
 - **Learner-Controlled Command System** — Added `why`, `visual`, `analogy`, `formal`, `hint`, `simpler`, `harder`, `review`, `exam mode`, and `recap` commands with Rich Mode and Text Mode behavior.
 - **Formal FHP Discovery Protocol** — Added a ten-step sequence from observation and question-setting through modeling, derivation, sanity checks, new applications, and limitations.
 - **Persistent LearnerState** — Added a canonical YAML state schema for identity, learning preferences, exam goals, mastery evidence, misconceptions, progress, review scheduling, session continuity, commands, and accessibility preferences.
+- **Optional Video Explanation Mode** — Added optional narrated 2D whiteboard videos in 16:9 landscape format, with a minimum duration of 10 seconds, complete narration checks, component and label consistency, learner consent, and static/interactive/text fallbacks.
 - **Branching Paths** — Added the post-quiz Go Deeper, Apply It, and Power On choice point.
 - **Socratic “Show Me the Why” Mode** — Added three-to-five-step Prediction Market chains, mastery scoring, Remedial Loop behavior, and the Curious Mind badge.
 - **Scientist / Explorer Character Cards** — Added the five-field card format, collection mechanic, Companion recap, and card-generation helper guidance.
@@ -27,6 +28,7 @@ This release updates the Master Pedagogy skill with mode-aware personalization, 
 - Normalized the skill frontmatter name to validator-compliant hyphen-case without changing the displayed version or teaching behavior.
 - Strengthened hobby personalization so analogies must explain structure, acknowledge their limits, avoid inaccurate mappings, rotate when unhelpful, and refresh at chapter boundaries rather than every sub-unit.
 - Added state lifecycle rules so commands, mastery evidence, pending gates, profile changes, pauses, and resumed sessions update one canonical learner record without erasing prior learning.
+- Added the `video` learner command and FHP safeguards ensuring videos supplement, rather than replace, written explanations, mastery checks, or first-principles reconstruction.
 - Expanded the Chapter Trophy Card to include combo records and Scientist Cards, with mind-map, skill-tree, and Command Center refresh behavior.
 - Clarified that website, README, deployment, branch, and export changes are outside the scope of this skill update.
 
