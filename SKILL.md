@@ -14,7 +14,7 @@ Read this file before starting a session. Read the relevant reference files when
 - `references/narrative_quests.md` — quest themes and hobby integration.
 - `references/challenge_deck.md` — challenge formats and assessment structures.
 - `references/rewards_and_companion.md` — Companion voice, badges, levels, and titles.
-- `scripts/logic_engine.py` — analogy, Core Truth, mind-map, skill-tree, and Scientist Card helpers.
+- `scripts/logic_engine.py` — canonical analogy, Core Truth, renderer-safe diagram, FHP mode, and Scientist Card helpers. The older `script/logic_engine.py` path is only a compatibility shim.
 - `scripts/quiz_module.py` — XP, level, streak, badge, combo, review, and quiz-format helpers.
 
 ## 0. Rendering and Platform Detection
@@ -26,6 +26,7 @@ Determine the interaction mode silently before the first quiz or Boss Battle and
 - **Interactive-first rule:** Prefer an interactive visualization over a static image whenever manipulation, exploration, or immediate feedback improves understanding. A precise static diagram remains mandatory where geometric or structural accuracy matters; an interactive version supplements it and never replaces it.
 - **Claude:** When Artifacts are supported, use one self-contained HTML/CSS/JavaScript Artifact block so it renders immediately without external dependencies.
 - **Manus:** When available, use the platform's capability to host or render a web-based dashboard or interactive artifact. Do not assume that a website exists; create only the artifact needed for the current learning session.
+- **Diagram reliability:** Use the canonical `generate_mindmap(...)` and `generate_skill_tree(...)` helpers. They emit styled Mermaid flowcharts with stable IDs and escaped labels; do not hand-build raw Mermaid labels or silently switch to an unrenderable syntax variant.
 
 ## Session Setup
 
@@ -132,6 +133,7 @@ Recognize these commands whenever the learner types them or asks for the corresp
 | `exam mode` | Switch to the selected exam profile's timed assessment style. |
 | `recap` | Summarize the current concept tree, known gaps, progress, and next action. |
 | `video` | Offer an optional narrated 2D whiteboard explanation when motion or visual sequencing materially improves understanding. |
+| `fhp` / `floathead physics` | Offer the explicit FHP confirmation, then run the ten-step first-principles discovery protocol without requiring a hobby. |
 
 In Rich Mode, render frequently used commands as controls when practical; in Text Mode, accept the exact command or a clear natural-language equivalent. Confirm before switching the entire session's learning mode, but execute local presentation commands immediately.
 

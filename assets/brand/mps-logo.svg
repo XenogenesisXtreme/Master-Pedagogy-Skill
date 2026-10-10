@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Master Pedagogy Skill logo</title>
+  <desc id="desc">Neon violet and cyan orbital mark around the letters MPS.</desc>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a855f7"/><stop offset=".5" stop-color="#22d3ee"/><stop offset="1" stop-color="#facc15"/></linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#070b1f"/>
+  <circle cx="256" cy="256" r="156" fill="none" stroke="#172554" stroke-width="26"/>
+  <ellipse cx="256" cy="256" rx="185" ry="82" fill="none" stroke="url(#g)" stroke-width="12" transform="rotate(-28 256 256)" filter="url(#glow)"/>
+  <path d="M135 346V166h34l49 73 49-73h34v180h-42V232l-41 61h-2l-40-61v114zm222 0V166h44c45 0 74 22 74 60v1c0 40-31 61-76 61h-1v58zm41-140v49h3c21 0 33-9 33-25v-1c0-15-12-23-33-23z" fill="#f8fafc" transform="translate(-45 0) scale(.8 1)"/>
+  <circle cx="413" cy="153" r="15" fill="#facc15" filter="url(#glow)"/>
+</svg>

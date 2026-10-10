@@ -112,6 +112,16 @@ The state updates after meaningful events such as session setup, profile selecti
 
 When a learner changes an exam profile, hobby, mode, or depth preference, the skill changes the teaching route without erasing previous learning. On return, it resumes from the earliest unresolved prerequisite, mastery gate, pending confirmation, or choice point. Commands such as `recap`, `review`, `exam mode`, and `simpler` read from the state and update it when appropriate, but cannot bypass mastery, safety, or confirmation requirements.
 
+### Learning Modes
+
+After the prerequisite audit, choose one of three modes:
+
+- **Standard Tutorial** — direct, structured teaching with grounded analogies.
+- **Narrative Quest** — the same mastery gates wrapped in a persistent story.
+- **Floathead Physics (FHP) Mode** — a rigorous, time-intensive mode that reconstructs ideas from observations, assumptions, limiting cases, derivations, sanity checks, applications, and limitations. FHP does **not** require a hobby analogy, but it does require learner confirmation before starting.
+
+The executable contract is available through `scripts.logic_engine.fhp_mode_details()` and `resolve_learning_mode("Floathead Physics")`. The legacy `script/logic_engine.py` path now delegates to the same implementation, so FHP cannot disappear depending on which import path a test uses.
+
 ### Rendering Modes
 
 The skill detects Manus's capabilities automatically:
@@ -120,6 +130,14 @@ The skill detects Manus's capabilities automatically:
 - **Text Mode** (default fallback): Rich text with Unicode progress bars, boxed callouts, emoji UI elements, and lettered answer choices.
 
 You don't need to configure this — the skill checks on startup and stays consistent.
+
+### Diagram Generation
+
+`scripts/logic_engine.py` is the single source of truth for diagrams. `generate_mindmap(...)` and `generate_skill_tree(...)` emit deterministic Mermaid flowcharts with stable node IDs, escaped labels, explicit status classes, and a high-contrast neon-friendly theme. Flowcharts are used instead of Mermaid mindmaps because they have broader renderer support and make completion/current/locked states reliable. The singular `script/logic_engine.py` module remains as a compatibility shim for older consumers.
+
+![Master Pedagogy Skill neon banner](assets/brand/mps-banner.svg)
+
+The source-controlled brand mark is available at [`assets/brand/mps-logo.svg`](assets/brand/mps-logo.svg).
 
 ### Example Session
 
