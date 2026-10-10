@@ -1,147 +1,82 @@
-# Master Pedagogy Skill  (v5 / c2.3 — Miscellaneous Changes)
+# Master Pedagogy Skill
 
-This is a Claude-specific overhaul of [Master-Pedagogy-Skill](https://github.com/XenogenesisXtreme/Master-Pedagogy-Skill), rebuilt to run as an [Anthropic Agent Skill](https://docs.claude.com/en/docs/build-with-claude/skills) in Claude.ai, Claude Code, and the Claude API. Works in Manus, but not all features are present.
+An adaptive, mastery-gated tutoring framework for Science, Mathematics, and technical subjects. It combines first-principles teaching with exam-aware curricula, interactive learning mechanics, narrative options, and reusable helper scripts.
 
-The original skill's core idea — a multi-agent tutor that gates progress on real mastery checks — is kept intact. This version adds a full gamification layer on top of it: a persistent mascot companion, real interactive quiz widgets (in clients that support them), rotating mini-game formats instead of one repeated quiz type, a badge/streak system with actual code behind the XP math, a 12-theme narrative quest library, and — in c1.2 — a suite of game-mechanic inspirations: combo multipliers, branching story paths, timed speedruns, Scientist/Explorer Character Cards, Socratic "Show Me the Why" mode, cross-chapter Boss Rematches, and a visual skill-tree progression map.
+The skill is designed for agent clients that can load `SKILL.md` (including Claude and Manus). **Available behavior depends on the host:** interactive widgets, cross-session persistence, rendered visuals, and generated video require supporting tools or application infrastructure.
 
-PS: 1.Use this skill in chat, avoid using it over many chats, it just runs better in one chat
-    
-    2.Website version - (https://gamifiedlearn-5vbwad52.manus.space/) Need a manus account, completeley free
+- **Website version:** [Gamified Learn](https://gamifiedlearn-5vbwad52.manus.space/) (requires a Manus account)
+- **Main instructions:** [`SKILL.md`](SKILL.md)
+- **Change history:** [`CHANGELOG.md`](CHANGELOG.md)
 
-See `CHANGELOG.md` for the full list of what changed from the original v4.2 and why.
+## What it includes
 
----
+- **Exam profiles:** General / Conceptual Learning, NEET, JEE, IOQM, and NSEJS, with profile-specific teaching priorities, question formats, and mastery expectations.
+- **Three learning modes:** Standard Tutorial, Narrative Quest, and confirmed Floathead Physics (FHP) Mode.
+- **Adaptive mastery workflow:** prerequisite audits, incremental sub-units, quizzes, hints, remedial loops, support mode, and mastery gates.
+- **Learner controls:** `why`, `visual`, `analogy`, `formal`, `hint`, `simpler`, `harder`, `review`, `exam mode`, `recap`, `video`, and `fhp`.
+- **Persistent-state specification:** a canonical `LearnerState` schema for preferences, exam goals, mastery evidence, misconceptions, review scheduling, and session continuity.
+- **Gamification:** XP, levels, streaks, combos, badges, Boss Battles and Rematches, branching paths, Scientist / Explorer Cards, and spaced review.
+- **Visual support:** renderer-safe Mermaid mind maps and skill trees, plus instructions to create and check actual diagrams when rendering is available.
+- **Optional video planning:** validated 16:9 storyboard generation and SVG scene-card fallback for lessons where motion or sequence helps.
 
-## What's in here
+## Exam profiles
 
+The skill keeps the conceptual core stable while adapting how it is taught and assessed. Select a primary profile before curriculum design; secondary goals can be recorded without mixing incompatible styles in one question set.
+
+| Profile | Emphasis | Typical assessment |
+|---|---|---|
+| **General / Conceptual Learning** | First principles, intuition, visual models, transfer, and real-world meaning | Explanations, worked examples, varied applications, and learner-generated questions |
+| **NEET** | NCERT-aligned Biology, Chemistry, and Physics; precise terminology, diagrams, distinctions, and efficient recall | Single-best-answer MCQs, statement questions, diagram interpretation, distractor analysis, and timed practice |
+| **JEE** | Mathematical modeling, derivations, multi-concept links, and rigorous problem solving | Multi-step and numerical problems, algebraic verification, and timed mixed sets |
+| **IOQM** | Discovery, proof-oriented reasoning, patterns, invariants, geometry, number theory, and combinatorics | Non-routine problems, proof sketches, structured hints, counterexamples, and transfer |
+| **NSEJS** | Integrated junior-science foundations across Physics, Chemistry, Biology, and Earth/space science | Mixed-subject reasoning, experiment and data interpretation, diagrams, and application questions |
+
+Content is labeled **Core Preparation**, **Useful Extension**, or **Beyond Target Level**. Timed practice follows untimed conceptual mastery rather than replacing it.
+
+## Learning modes and controls
+
+- **Standard Tutorial** — direct, structured teaching with grounded analogies based on an interest the learner chooses.
+- **Narrative Quest** — the same learning and mastery gates within a persistent story theme.
+- **Floathead Physics (FHP)** — a rigorous, time-intensive rediscovery path. It requires explicit learner confirmation and does not require a hobby analogy. Its protocol moves from observation and question-setting through assumptions, limiting cases, modeling, derivation, checks, application, and limitations.
+
+Learners can request local changes at any point—for example, `hint`, `simpler`, or `formal`. Commands change the teaching approach, not the underlying prerequisites or mastery requirements. `exam mode` applies the selected profile's assessment style; `video` offers an optional visual supplement when useful.
+
+## LearnerState and persistence
+
+`SKILL.md` defines one canonical `LearnerState` containing identity and learning preferences, exam goals, topic progress, mastery evidence, misconceptions, review queues, rewards, accessibility preferences, and pending session choices.
+
+**The schema is a specification, not a storage service.** A host application must provide a database, file, session store, or equivalent mechanism to persist it between sessions. The skill keeps demonstrated conceptual mastery separate from XP, badges, and narrative progress.
+
+## What is implemented in this repository
+
+| Component | Implemented capability | Boundary |
+|---|---|---|
+| [`scripts/logic_engine.py`](scripts/logic_engine.py) | Analogy seeds, Core Truth formatting, FHP mode resolution/details, deterministic Mermaid mind maps and skill trees, Scientist Card helpers | Exam-specific curriculum behavior and learner-state persistence are directed by `SKILL.md`; this module does not implement a full tutoring application |
+| [`script/logic_engine.py`](script/logic_engine.py) | Compatibility shim for older singular-path imports | Delegates to the canonical `scripts/` implementation |
+| [`scripts/quiz_module.py`](scripts/quiz_module.py) | XP, levels, streaks, badges, combo, challenge-format, review, and Socratic helpers | The host/agent orchestrates the session and stores learner state |
+| [`scripts/video_explainer.py`](scripts/video_explainer.py) | Provider-neutral storyboard construction and validation; deterministic SVG scene cards and a manifest as a fallback | **Does not generate an MP4 by itself.** A video provider or local rendering backend must be connected for actual video output |
+| [`tests/`](tests/) | Unit tests for diagram/FHP helpers and storyboard/fallback behavior | Run with the command below |
+
+## Quick start
+
+Read [`SKILL.md`](SKILL.md) first. For a new topic, the intended flow is:
+
+1. Initialize or resume learner state; choose an exam profile, subject, and learning mode.
+2. Audit prerequisites and agree on the learning route.
+3. Teach one sub-unit at a time, using appropriate visualizations and examples.
+4. Assess mastery, give hints or a remedial loop when needed, then offer the learner a branching choice.
+5. Record evidence and progress; schedule review and update the concept/skill maps.
+
+For local helper use:
+
+```python
+from scripts.logic_engine import generate_mindmap, generate_skill_tree, fhp_mode_details
+
+print(fhp_mode_details())
+print(generate_mindmap("Rotational Mechanics", ["Linear Dynamics"], ["Torque", "Angular Momentum"]))
 ```
-SKILL.md                              — the skill itself (read this first)
-references/
-  narrative_quests.md                 — 12 story themes + hobby-personalization notes + XG quest integration
-  challenge_deck.md                   — the 7 quiz/mini-game formats, spec for each + branching/Socratic integration
-  rewards_and_companion.md            — badge list (16 total), leveling table, companion voice guide (60+ voice lines)
-  scientist_cards.md                  — full database of 40+ Scientist/Explorer Character Cards + dynamic generation rules
-scripts/
-  logic_engine.py                     — analogy-seeding, mind-map generation, scientist card builder, skill-tree emitter
-  quiz_module.py                      — XP/level math, streaks, badges, combo multiplier, Boss Rematch queue, Socratic chain generator
-```
 
----
-
-## Installing
-
-**Claude.ai / Claude apps**: package this folder as a `.skill` file (see below) and upload it — Anthropic's docs cover the current upload flow, since this changes over time: https://docs.claude.com
-
-**Claude Code**: copy this whole folder into your skills directory, e.g.
-
-```bash
-mkdir -p ~/.claude/skills
-cp -r . ~/.claude/skills/master-pedagogy-v5
-```
-
-**Packaging as `.skill`**: if you have Anthropic's `skill-creator` tooling available, run:
-
-```bash
-python -m scripts.package_skill /path/to/this/folder
-```
-
----
-
-## How to Use on Manus
-
-This skill is designed to be dropped into any Manus project and activated automatically when a learner asks to study or master a topic. Here's how to set it up and use it:
-
-### Installation
-
-**Step 1: Clone into your Manus project**
-
-```bash
-git clone https://github.com/XenogenesisXtreme/Master-Pedagogy-Skill.git
-cd Master-Pedagogy-Skill
-```
-
-**Step 2: Add the skill to your project configuration**
-
-Copy the entire folder contents into your Manus project's skills directory. The `SKILL.md` file will be auto-detected by Manus as an agent skill.
-
-**Step 3 (optional): Use as a project-level instruction**
-
-If you want the skill to be active by default on every task (without needing to be triggered), add its contents to your project's instructions via Manus settings. Otherwise, it will auto-activate when the user mentions learning, studying, mastering, or reviewing any topic.
-
-### Activation Triggers
-
-The skill auto-activates when the user says anything like:
-
-| Example Trigger | What It Activates |
-|---|---|
-| "Teach me [topic]" | Full learning session |
-| "Help me understand [topic]" | Full learning session |
-| "Quiz me on [topic]" | Skips teaching, goes straight to assessment |
-| "I want to learn/master [topic]" | Full learning session |
-| "Help me study for [exam/subject]" | Full learning session with exam prep framing |
-| "I'm struggling with [topic]" | Skips to Support Mode directly |
-
-You do **not** need to say "gamify this" — the gamification layer is the default delivery mechanism.
-
-### What to Expect
-
-Once activated, the session follows this flow:
-
-1. **Session Setup** — The Companion (Agent E) introduces itself, asks for a name, calibrates tone ("thick and fast," "dry and witty," or "mostly serious"), and asks the learner's depth preference (quick quizzes vs. step-by-step "why" explanations).
-2. **Prerequisite Audit** — Agent A checks what foundational knowledge is needed before the chapter begins.
-3. **Quest Selection** — Agent D offers a choice: standard tutorial or a narrative quest (12 themes, personalized to the learner's hobby).
-4. **Learning Loop** — Each sub-unit goes: Architect teaches → Proctor tests (with Scientist Cards, Socratic mode, and branching paths) → Gamemaster awards XP/streaks/combos/badges → Companion reacts.
-5. **Boss Battles** — Every 500 XP triggers a level-up and a Boss Battle (a multi-step, real-world application problem).
-6. **Chapter Deliverables** — On completion: Cheat Sheet, Problem Set, and Trophy Card (with Scientist Card collection recap).
-
-### LearnerState
-
-The skill maintains one canonical **`LearnerState`** record across sessions and chapters. It keeps learner preferences, exam goals, conceptual mastery, misconceptions, review scheduling, gamification, session continuity, and accessibility preferences in one structured state rather than scattering them across narrative messages or quiz results.
-
-> `LearnerState` is the skill’s state-management specification. A deployed application still needs a storage layer—such as a database, local file, or session store—to persist the record between sessions.
-
-| State area | What it tracks |
-|---|---|
-| **Identity and preferences** | Preferred name, Companion, tone, depth, language, pacing, rendering, accessibility, and narrative preferences. |
-| **Learning context** | Learning mode, primary and secondary exam profiles, subject, topic, chapter, sub-unit, hobby, and hobby consent. |
-| **Mastery** | Concept status, confidence, evidence, prerequisites, misconceptions, fragile concepts, and current mastery gate. |
-| **Progress** | XP, level, title, streak, combo, badges, Scientist Cards, and completed chapters. |
-| **Review and continuity** | Review queue, scheduled reviews, Boss Rematches, last activity, pause point, pending choices, and pending confirmations. |
-
-The state updates after meaningful events such as session setup, profile selection, prerequisite audits, explanations, learner commands, quiz attempts, Remedial Loops, branch choices, reviews, level-ups, badge awards, chapter completion, pauses, and resumes. Conceptual mastery is kept separate from XP and badges: rewards represent engagement, while mastery requires evidence through explanation, application, derivation, proof, diagrams, or timed performance.
-
-When a learner changes an exam profile, hobby, mode, or depth preference, the skill changes the teaching route without erasing previous learning. On return, it resumes from the earliest unresolved prerequisite, mastery gate, pending confirmation, or choice point. Commands such as `recap`, `review`, `exam mode`, and `simpler` read from the state and update it when appropriate, but cannot bypass mastery, safety, or confirmation requirements.
-
-### Learning Modes
-
-After the prerequisite audit, choose one of three modes:
-
-- **Standard Tutorial** — direct, structured teaching with grounded analogies.
-- **Narrative Quest** — the same mastery gates wrapped in a persistent story.
-- **Floathead Physics (FHP) Mode** — a rigorous, time-intensive mode that reconstructs ideas from observations, assumptions, limiting cases, derivations, sanity checks, applications, and limitations. FHP does **not** require a hobby analogy, but it does require learner confirmation before starting.
-
-The executable contract is available through `scripts.logic_engine.fhp_mode_details()` and `resolve_learning_mode("Floathead Physics")`. The legacy `script/logic_engine.py` path now delegates to the same implementation, so FHP cannot disappear depending on which import path a test uses.
-
-### Rendering Modes
-
-The skill detects Manus's capabilities automatically:
-
-- **Rich Mode** (if Manus's `visualize` widget system is available): Interactive quiz widgets, animated progress bars, styled card widgets.
-- **Text Mode** (default fallback): Rich text with Unicode progress bars, boxed callouts, emoji UI elements, and lettered answer choices.
-
-You don't need to configure this — the skill checks on startup and stays consistent.
-
-### Diagram Generation
-
-`scripts/logic_engine.py` is the single source of truth for diagrams. `generate_mindmap(...)` and `generate_skill_tree(...)` emit deterministic Mermaid flowcharts with stable node IDs, escaped labels, explicit status classes, and a high-contrast neon-friendly theme. Flowcharts are used instead of Mermaid mindmaps because they have broader renderer support and make completion/current/locked states reliable. The singular `script/logic_engine.py` module remains as a compatibility shim for older consumers.
-
-![Master Pedagogy Skill neon banner](assets/brand/mps-banner.svg)
-
-The source-controlled brand mark is available at [`assets/brand/mps-logo.svg`](assets/brand/mps-logo.svg).
-
-### Video Explanation Mode
-
-Video is an optional supplement, not a replacement for the mastery gate. The provider-neutral pipeline in [`scripts/video_explainer.py`](scripts/video_explainer.py) turns a verified lesson into a 16:9 storyboard, validates timing and required checks, and can render deterministic neon SVG scene cards when no video backend is available.
+To build an optional video storyboard and static fallback scene cards:
 
 ```python
 from scripts.video_explainer import build_storyboard, render_static_fallback
@@ -159,60 +94,31 @@ storyboard = build_storyboard(
 render_static_fallback(storyboard, "build/video-scenes")
 ```
 
-Supported storyboard styles are `whiteboard`, `short`, `cinematic`, and `fhp`. FHP storyboards are rejected unless `derived=True`, ensuring that video reinforces a completed first-principles derivation rather than bypassing it. A future Google/Veo or Manus video adapter can consume the same storyboard without changing the lesson logic.
+FHP video storyboards require `derived=True` so a video supplements a completed written derivation rather than replacing it.
 
-### Example Session
+## Installation and activation
 
-```
-You: Teach me rotational mechanics, I like guitar.
+Clone the repository:
 
-Companion: [introduces itself, asks for name and vibe]
-...
-Agent A: [checks prerequisites — linear dynamics, torque]
-Agent D: [offers quest: Space Mission, Detective, or Startup]
-You: Space Mission, thick and fast jokes.
-...
-[The session begins with narrative, quizzes, Scientist Cards,
- combo multipliers, and branching paths — all themed to the ship
- keeping its gyroscopes stabilized for re-entry.]
+```bash
+git clone https://github.com/XenogenesisXtreme/Master-Pedagogy-Skill.git
+cd Master-Pedagogy-Skill
 ```
 
-### Tips for Best Results
+Install or attach the skill according to your agent client's skill-directory or project-instructions workflow. The skill is intended to activate when a learner asks to study, learn, understand, review, or prepare for an exam. The host must support any optional interactive or media tools the session uses.
 
-State your hobby early so the analogy engine builds everything around it. Answer honestly on the audit — Agent A will fill gaps before they become problems. Use branching paths after each quiz: pick "Go Deeper" if you want the math, "Apply It" if you want real-world context, or "Power On" to stay fast-paced. Ask "why" — any "why does that work" question triggers Socratic mode automatically. Don't skip the Scientist Cards — they're the human stories behind the formulas, and they're collected across chapters for a real sense of accumulation.
+## Tests
 
----
+The current tests use Python's standard library `unittest` runner:
 
-## Recent Changes
+```bash
+python -m unittest discover -s tests -v
+```
 
-### v5 c1.2 — Extended Gamification Edition (XG) — Latest
+## Feature-retention audit
 
-Released as branch `V5_c1.2_XG` (July 2026). Added nine new game-mechanic-inspired features:
+The `MPS-V5-c2.4-Exam-Profiles` branch was merged into `main`. The exam branch's skill instructions, helper modules, tests, and brand assets are present on `main`. The compared file trees differed only in `README.md` and `CHANGELOG.md`; the newer main-branch documentation edits were retained. This README now documents the merged feature set and clarifies which capabilities are specifications or provider-dependent rather than standalone runtime services.
 
-| Feature | Description |
-|---|---|
-| **Combo multiplier system** | 1.5x XP after 2 consecutive fast clears (<90s each), 2.0x after 4. Resets on miss or slow clear. Companion announces activations and expirations. |
-| **Branching paths** | After every quiz, the learner chooses: "Go Deeper" (more math/proof), "Apply It" (real-world case study), or "Power On" (next sub-unit). Shapes narrative beat and quiz format. |
-| **Timed speedrun challenges** | After a fast clear, the learner can attempt a 60-second bonus round for +50 XP. No penalty for failing. |
-| **Unlockable lore cards** | Story-themed collectibles tied to the active narrative quest. Different archives per theme (mission logs, cold case files, ancient scrolls, etc.). |
-| **Scientist/Explorer Character Cards** | Full database of 40+ pre-built cards covering physics, optics, electromagnetism, chemistry, biology, astronomy, mathematics, and history. Each card has name, discovery, significance, human detail, and quote. Emitted before quizzes as collectible info blocks. |
-| **Socratic "Show Me the Why" mode** | Guided 3–5 step derivation chains where the learner predicts each step (Prediction Market format per step). Activated by depth preference, "why" questions, or manual request. Awards Curious Mind badge. |
-| **Cross-chapter Boss Rematches** | Concepts struggled with 3+ chapters ago resurface paired with a current concept. 1.5x XP and a new "Revenge" badge. Framed narratively as a second chance. |
-| **Visual skill-tree progression map** | Mermaid diagram showing completed, in-progress, and locked chapters across the learner's entire journey. Rendered at chapter start and updated on completion. |
-| **Easter egg callbacks** | Companion stores unusually creative learner answers and references them later in different contexts. |
+## License and credit
 
-Five new badges added: Combo Breaker (+15 XP), Untouchable (+40 XP), Speed Demon (+20 XP), Lore Keeper (+50 XP), Revenge (+35 XP).
-
-### v5 c1.1 — Initial Claude Overhaul
-
-The original Claude-specific version that added the gamification layer (companion, badges, streaks, levels, boss battles, narrative quests, challenge deck) on top of the core v4.2 mastery-gating framework.
-
----
-
-## License
-
-MIT — see `LICENSE`. Copyright is currently attributed to XenogenesisXtreme (the original repo owner); change the name in `LICENSE` if that's not correct for how you want this published.
-
-## Credit
-
-Built on the structure and intent of the original [Master-Pedagogy-Skill](https://github.com/XenogenesisXtreme/Master-Pedagogy-Skill) (Agents A–D, first-principles relatability filter, mandatory diagram/formula formatting rules). This edition adds Agent E (the Companion), the Challenge Deck, the badge/reward system, rendering-mode-aware interactive quizzes, and the Extended Gamification suite (combos, branching, speedruns, Scientist Cards, Socratic mode, Boss Rematches, skill tree).
+MIT — see [`LICENSE`](LICENSE). This project builds on the original Master Pedagogy framework and preserves its prerequisite-audit and mastery-gating approach while adding adaptive learning modes, exam-aware guidance, and gamification.
