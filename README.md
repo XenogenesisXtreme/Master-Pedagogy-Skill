@@ -139,6 +139,28 @@ You don't need to configure this — the skill checks on startup and stays consi
 
 The source-controlled brand mark is available at [`assets/brand/mps-logo.svg`](assets/brand/mps-logo.svg).
 
+### Video Explanation Mode
+
+Video is an optional supplement, not a replacement for the mastery gate. The provider-neutral pipeline in [`scripts/video_explainer.py`](scripts/video_explainer.py) turns a verified lesson into a 16:9 storyboard, validates timing and required checks, and can render deterministic neon SVG scene cards when no video backend is available.
+
+```python
+from scripts.video_explainer import build_storyboard, render_static_fallback
+
+storyboard = build_storyboard(
+    topic="Newton's Second Law",
+    objective="Relate net force, mass, and acceleration.",
+    narration="Observe the motion. Define the variables. Derive the relationship. Check the units.",
+    mastery_check="Predict how acceleration changes when net force doubles.",
+    exam_profile="JEE",
+    style="whiteboard",
+    equations=["F = ma"],
+    derived=True,
+)
+render_static_fallback(storyboard, "build/video-scenes")
+```
+
+Supported storyboard styles are `whiteboard`, `short`, `cinematic`, and `fhp`. FHP storyboards are rejected unless `derived=True`, ensuring that video reinforces a completed first-principles derivation rather than bypassing it. A future Google/Veo or Manus video adapter can consume the same storyboard without changing the lesson logic.
+
 ### Example Session
 
 ```

@@ -132,7 +132,7 @@ Recognize these commands whenever the learner types them or asks for the corresp
 | `review` | Start retrieval practice from the spaced-review queue or current fragile concepts. |
 | `exam mode` | Switch to the selected exam profile's timed assessment style. |
 | `recap` | Summarize the current concept tree, known gaps, progress, and next action. |
-| `video` | Offer an optional narrated 2D whiteboard explanation when motion or visual sequencing materially improves understanding. |
+| `video` | Offer an optional narrated 2D whiteboard explanation when motion or visual sequencing materially improves understanding. Use `scripts/video_explainer.py` to create and validate the storyboard before invoking a video backend. |
 | `fhp` / `floathead physics` | Offer the explicit FHP confirmation, then run the ten-step first-principles discovery protocol without requiring a hobby. |
 
 In Rich Mode, render frequently used commands as controls when practical; in Text Mode, accept the exact command or a clear natural-language equivalent. Confirm before switching the entire session's learning mode, but execute local presentation commands immediately.
@@ -246,9 +246,9 @@ When Video Explanation Mode is selected, use a **2D whiteboard animation** in **
 
 The whiteboard sequence must show all components needed for the target explanation, not merely provide decorative motion. For physics, this may include the body, axes, forces, vector directions, components, angles, equations, constraints, and relevant motion. Keep symbols, labels, arrow directions, units, and geometry consistent with the written lesson. State assumptions and distinguish idealized models from real-world behavior when relevant.
 
-Use this workflow: decide whether a video adds instructional value and obtain consent when it is offered; define the objective, exam profile, required components, assumptions, and visual sequence; write a short English narration whose spoken duration fits the timeline; create a 16:9 storyboard; generate a video of at least 10 seconds; verify that narration reaches its final sentence and that labels remain visible long enough to read; then deliver the video together with a written explanation and mastery check. If video generation is unavailable, fall back to a precise static diagram, interactive visualization, or text explanation without blocking the learner.
+Use this workflow: decide whether a video adds instructional value and obtain consent when it is offered; define the objective, exam profile, required components, assumptions, and visual sequence; write a short English narration whose spoken duration fits the timeline; call `build_storyboard(...)` from `scripts/video_explainer.py`; run `validate_storyboard(...)`; generate a video of at least 10 seconds through a provider adapter; verify that narration reaches its final sentence and that labels remain visible long enough to read; then deliver the video together with a written explanation and mastery check. If a provider is unavailable, call `render_static_fallback(...)` to produce checked scene cards and a manifest, then provide the precise diagram or text explanation without blocking the learner.
 
-In Rich Mode, offer Video Explanation Mode as an optional control. In Text Mode, write: “Type `video` if you want an optional narrated whiteboard explanation.” The command must respect the learner’s exam profile, current mode, accessibility preferences, and `LearnerState`. In FHP Mode, video may illustrate a discovery already developed by the learner, but it must not replace first-principles reconstruction or reveal the complete derivation prematurely.
+In Rich Mode, offer Video Explanation Mode as an optional control. In Text Mode, write: “Type `video` if you want an optional narrated whiteboard explanation.” The command must respect the learner’s exam profile, current mode, accessibility preferences, and `LearnerState`. `scripts/video_explainer.py` supports `whiteboard`, `short`, `cinematic`, and `fhp` storyboard styles; the implementation is provider-neutral so Google/Veo, Manus generation, or a local assembler can be added behind the same contract. In FHP Mode, `build_storyboard(...)` must receive `derived=True`, meaning the written derivation is complete before video generation; video may reinforce the discovery but must not replace first-principles reconstruction or reveal the complete derivation prematurely.
 
 ### Formula Presentation
 
@@ -306,4 +306,4 @@ Update the mind map and skill tree, recap the Scientist Card collection, and pre
 
 ## Scope Boundary
 
-This update defines the learning behavior, rendering preferences, interaction patterns, and artifact expectations for a future web experience. It does **not** implement or modify a website, README, deployment, branch, or export workflow. Those changes remain deferred until separately requested and approved.
+This skill defines the learning behavior, rendering preferences, interaction patterns, and artifact expectations. The repository also includes a provider-neutral storyboard validator and deterministic static fallback for optional video explanations; provider-specific video generation and deployment remain separate adapters.
