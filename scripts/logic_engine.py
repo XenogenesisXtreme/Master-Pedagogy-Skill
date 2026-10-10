@@ -1,51 +1,49 @@
 #!/usr/bin/env python3
-"""
-logic_engine.py — First-principles + relatability + Scientist Card + Skill Tree helpers
-for Master Pedagogy v5 (XG Edition).
+"""Reusable helpers for Master Pedagogy v5.
 
-Five jobs:
-1. build_analogy_seed(hobby)   -> structural hints about a hobby to seed analogies from
-2. core_truth(formula, plain)  -> formats the "strip the formula to a physical truth" block
-3. generate_mindmap(...)       -> emits Mermaid.js syntax for the knowledge-tree mind map
-4. build_scientist_card(...)    -> formats a Scientist/Explorer Character Card block
-5. generate_skill_tree(...)     -> emits Mermaid.js syntax for a visual skill-tree progression map
-
-Run this file directly (`python3 logic_engine.py`) to see a demo of all functions.
-No third-party dependencies — stdlib only, safe to run in any sandbox.
+The module is dependency-free and intentionally keeps diagram output as Mermaid
+source. The emitted diagrams use stable IDs, escaped labels, and explicit theme
+styles so they render consistently in Mermaid-capable clients.
 """
 
 from __future__ import annotations
-from typing import Iterable
+
+import re
+from typing import Iterable, Mapping
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# 1. Hobby Analogy Seeds
-# ═══════════════════════════════════════════════════════════════════════════════
+LEARNING_MODES = (
+    "standard",
+    "narrative",
+    "fhp",
+)
 
-# A small knowledge base of structural traits per hobby category, used to seed
-# analogies that go beyond "here's a sport metaphor" surface-level matching.
-# Keys are matched case-insensitively as substrings of the learner's stated hobby.
+FHP_MODE = "fhp"
+FHP_DISPLAY_NAME = "Floathead Physics (FHP) Mode"
+FHP_PROTOCOL = (
+    "observe",
+    "question",
+    "knowns_unknowns",
+    "assumptions",
+    "limiting_case",
+    "model",
+    "derive",
+    "sanity_checks",
+    "new_application",
+    "limitations",
+)
+
+
 _HOBBY_TRAITS = {
-    "music":      ["timing/rhythm", "layering multiple parts into one whole", "practice = repetition with feedback", "tuning = small continuous correction"],
-    "guitar":     ["timing/rhythm", "tension and release (string tension ~ physical tension)", "muscle memory built through repetition"],
-    "piano":      ["independent hands doing different things at once", "timing/rhythm", "reading two staves simultaneously = parallel processing"],
-    "cooking":    ["ratios and proportions", "timing multiple processes to finish together", "small input changes → big output changes (seasoning, heat)", "irreversible steps vs. adjustable ones"],
-    "chess":      ["positional trade-offs", "thinking several moves ahead (prediction)", "sacrificing short-term for long-term gain"],
-    "gaming":     ["resource management", "risk/reward trade-offs", "pattern recognition under time pressure", "iterating fast after failure (respawn/retry loop)"],
-    "esports":    ["resource management", "reaction time vs. planning", "team roles/specialization"],
-    "sports":     ["momentum", "energy expenditure vs. pacing", "team roles/specialization", "practice reps building reliability"],
-    "basketball": ["momentum", "angles and trajectories (shooting arcs)", "spacing/positioning"],
-    "soccer":     ["momentum", "angles and trajectories (passing/shots)", "space and positioning"],
-    "football":   ["momentum", "formations = structured positioning", "risk/reward play-calling"],
-    "dance":      ["timing/rhythm", "balance and center of mass", "muscle memory through repetition"],
-    "art":        ["proportion and scale", "light/shadow = gradients", "composition = balance of elements"],
-    "photography":["light as a quantity that can be measured and controlled", "framing = choosing what to include/exclude", "exposure = trade-off between multiple settings"],
-    "coding":     ["logical dependencies (prerequisites)", "debugging = isolating variables", "abstraction layers"],
-    "reading":    ["narrative structure = cause and effect chains", "foreshadowing = using early info to predict later info"],
-    "cars":       ["mechanical trade-offs (power vs. efficiency)", "systems that depend on each other (engine/transmission)", "tuning = small continuous correction"],
-    "fashion":    ["proportion and balance", "trends = patterns that shift over time", "layering"],
+    "music": ["timing/rhythm", "layering multiple parts into one whole", "practice = repetition with feedback", "tuning = small continuous correction"],
+    "guitar": ["timing/rhythm", "tension and release", "muscle memory built through repetition"],
+    "piano": ["independent hands doing different things at once", "timing/rhythm", "parallel processing"],
+    "cooking": ["ratios and proportions", "timing multiple processes to finish together", "small input changes can produce big output changes"],
+    "chess": ["positional trade-offs", "thinking several moves ahead", "sacrificing short-term for long-term gain"],
+    "gaming": ["resource management", "risk/reward trade-offs", "pattern recognition under time pressure", "iterating after failure"],
+    "coding": ["logical dependencies", "debugging by isolating variables", "abstraction layers"],
+    "sports": ["momentum", "energy expenditure versus pacing", "team roles and specialization"],
 }
-
 _GENERIC_TRAITS = [
     "getting better through repetition with feedback",
     "trade-offs between competing goals",
@@ -54,246 +52,172 @@ _GENERIC_TRAITS = [
 
 
 def build_analogy_seed(hobby: str) -> dict:
-    """Return structural traits of a hobby to ground analogies in, plus a fallback.
-
-    This is intentionally NOT trying to generate the analogy itself — that's a
-    creative step best done by the model with full context on the subject being
-    taught. This just supplies grounded raw material so the analogy isn't generic.
-    """
-    hobby_lower = (hobby or "").lower().strip()
-    matched_traits: list[str] = []
-    matched_keys: list[str] = []
-
-    for key, traits in _HOBBY_TRAITS.items():
-        if key in hobby_lower or hobby_lower in key:
-            matched_traits.extend(traits)
-            matched_keys.append(key)
-
-    if not matched_traits:
+    """Return structural traits for an analogy without inventing a hobby."""
+    hobby_text = (hobby or "").strip()
+    lowered = hobby_text.lower()
+    traits: list[str] = []
+    matched: list[str] = []
+    for key, values in _HOBBY_TRAITS.items():
+        if key in lowered or lowered in key:
+            traits.extend(values)
+            matched.append(key)
+    if not traits:
         return {
             "hobby": hobby,
             "matched_category": None,
-            "traits": _GENERIC_TRAITS,
-            "note": (
-                f"No specific trait bank for '{hobby}' — use the generic traits below, "
-                "or better: ask the learner one follow-up question about what they "
-                "actually *do* in this hobby (a specific motion, decision, or ratio) "
-                "and build the analogy from that concrete detail instead."
-            ),
+            "traits": _GENERIC_TRAITS.copy(),
+            "note": "Ask for a concrete motion, decision, or ratio before building a specific analogy.",
         }
-
     return {
         "hobby": hobby,
-        "matched_category": matched_keys,
-        "traits": matched_traits,
-        "note": "Pick 1-2 traits that most directly mirror the mechanism of the concept being taught — don't try to use all of them.",
+        "matched_category": matched,
+        "traits": traits,
+        "note": "Choose one or two traits that mirror the mechanism; state the analogy's limits.",
     }
 
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# 2. Core Truth Formatter
-# ═══════════════════════════════════════════════════════════════════════════════
 
 def core_truth(formula_name: str, plain_english: str, physical_truth: str) -> str:
-    """Format the 'strip the formula to a Core Truth' block used at the start of a concept."""
-    return (
-        f"**{formula_name}**\n"
-        f"Plain English: {plain_english}\n"
-        f"Core Truth: {physical_truth}"
-    )
+    """Format a compact Core Truth block."""
+    return f"**{formula_name}**\nPlain English: {plain_english}\nCore Truth: {physical_truth}"
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# 3. Mind Map Generator (unchanged from v5)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-def generate_mindmap(topic: str, prerequisites: Iterable[str], subunits: Iterable[str], completed: Iterable[str] = ()) -> str:
-    """Emit Mermaid.js mind-map syntax showing prerequisites -> topic -> subunits.
-
-    Completed subunits get a ✅ prefix so progress is visually obvious at a glance.
-    Render this with the `diagram` visualize module, or as a fenced ```mermaid block
-    in Text Mode (most chat renderers will draw it as-is).
-    """
-    completed_set = set(completed)
-    lines = ["mindmap", f"  root(({topic}))"]
-
-    if prerequisites:
-        lines.append("    Prerequisites")
-        for p in prerequisites:
-            lines.append(f"      {p}")
-
-    lines.append("    Sub-units")
-    for s in subunits:
-        prefix = "✅ " if s in completed_set else ""
-        lines.append(f"      {prefix}{s}")
-
-    return "\n".join(lines)
+def resolve_learning_mode(mode: str | None) -> str:
+    """Normalize a learner mode and make FHP discoverable to programmatic callers."""
+    value = (mode or "standard").strip().lower().replace(" ", "_").replace("-", "_")
+    aliases = {
+        "tutorial": "standard",
+        "standard_tutorial": "standard",
+        "quest": "narrative",
+        "narrative_quest": "narrative",
+        "floathead": FHP_MODE,
+        "floathead_physics": FHP_MODE,
+        "floathead_physics_mode": FHP_MODE,
+        "fhp_mode": FHP_MODE,
+    }
+    resolved = aliases.get(value, value)
+    if resolved not in LEARNING_MODES:
+        raise ValueError(f"Unknown learning mode {mode!r}; choose standard, narrative, or fhp.")
+    return resolved
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# 4. Scientist / Explorer Character Card Builder (NEW — XG Edition)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-def build_scientist_card(
-    name: str,
-    years: str,
-    discovery: str,
-    significance: str,
-    human_detail: str,
-    quote: str = "",
-) -> dict:
-    """Build a Scientist/Explorer Character Card data dict.
-
-    The Proctor (Agent C) uses this to render the card before a quiz.
-    See references/scientist_cards.md for the full database of pre-built cards.
-
-    Returns a dict with all card fields, ready for the rendering layer.
-    """
+def fhp_mode_details() -> dict:
+    """Return the confirmation and protocol contract for Floathead Physics mode."""
     return {
-        "type": "scientist_card",
-        "name": name,
-        "years": years,
-        "discovery": discovery,
-        "significance": significance,
-        "human_detail": human_detail,
-        "quote": quote,
+        "id": FHP_MODE,
+        "name": FHP_DISPLAY_NAME,
+        "requires_confirmation": True,
+        "requires_hobby": False,
+        "protocol": list(FHP_PROTOCOL),
+        "warning": "FHP is rigorous and time-intensive. Ask whether the learner is sure before beginning.",
     }
 
 
-def render_scientist_card(card: dict, mode: str = "text") -> str:
-    """Render a Scientist Card dict into display text.
-
-    mode: 'text' for boxed callout (Text Mode), 'markdown' for rich markdown block.
-    """
-    name_line = f"## {card['name']} ({card['years']})"
-    if mode == "text":
-        return (
-            f"\n{'─' * 50}\n"
-            f"  🔬 CHARACTER CARD: {card['name']}\n"
-            f"  {card['discovery']}\n"
-            f"{'─' * 50}\n"
-            f"  Why it mattered: {card['significance']}\n"
-            f"  The person behind it: {card['human_detail']}\n"
-            f"{('  Quote: \"' + card['quote'] + '\"') if card['quote'] else ''}\n"
-            f"{'─' * 50}\n"
-        )
-    else:
-        return (
-            f"\n{name_line}\n\n"
-            f"| Field | Detail |\n"
-            f"|---|---|\n"
-            f"| **Discovery** | {card['discovery']} |\n"
-            f"| **Why It Mattered** | {card['significance']} |\n"
-            f"| **The Person** | {card['human_detail']} |\n"
-            + (f"| **Quote** | \"{card['quote']}\" |\n" if card["quote"] else "")
-        )
+def _label(value: object) -> str:
+    """Escape Mermaid label characters while retaining readable Unicode text."""
+    text = re.sub(r"\s+", " ", str(value or "")).strip() or "Untitled"
+    return text.replace('"', "'").replace("[", "(").replace("]", ")").replace("{", "(").replace("}", ")")
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# 5. Skill Tree Generator (NEW — XG Edition)
-# ═══════════════════════════════════════════════════════════════════════════════
+def _node_id(prefix: str, index: int) -> str:
+    return f"{prefix}{index}"
 
-def generate_skill_tree(
-    chapters: list[dict],
-    current_chapter_index: int = -1,
-) -> str:
-    """Emit Mermaid.js syntax for a visual skill-tree progression map.
 
-    Each chapter is a node:
-      - ✅ completed chapters get a green check
-      - 🔒 future chapters are grayed out / locked
-      - The current chapter pulses (marked with a star ★)
-
-    `chapters` is a list of dicts:
-      [{"title": "Dynamics", "completed": True},
-       {"title": "Work & Energy", "completed": True},
-       {"title": "Rotational Mechanics", "completed": False},  # in-progress
-       {"title": "Thermodynamics", "completed": False},         # locked
-       ...]
-
-    Render with the `diagram` visualize module, or as a fenced ```mermaid block.
-    """
-    lines = [
-        "flowchart LR",
-        "    classDef completed fill:#2ecc71,stroke:#27ae60,color:white,font-weight:bold",
-        "    classDef current fill:#f39c12,stroke:#e67e22,color:white,font-weight:bold",
-        "    classDef locked fill:#95a5a6,stroke:#7f8c8d,color:white",
+def _diagram_header(direction: str) -> list[str]:
+    return [
+        "%%{init: {'theme':'base','themeVariables': {'fontFamily':'Inter,Segoe UI,sans-serif','primaryColor':'#111827','primaryTextColor':'#f8fafc','primaryBorderColor':'#22d3ee','lineColor':'#64748b','secondaryColor':'#172554','tertiaryColor':'#1e293b'}}}%%",
+        f"flowchart {direction}",
+        "    classDef root fill:#7c3aed,stroke:#c4b5fd,color:#ffffff,font-weight:bold,stroke-width:2px",
+        "    classDef group fill:#0e7490,stroke:#67e8f9,color:#ecfeff,font-weight:bold",
+        "    classDef item fill:#111827,stroke:#38bdf8,color:#f8fafc",
+        "    classDef done fill:#14532d,stroke:#4ade80,color:#f0fdf4,font-weight:bold",
+        "    classDef current fill:#713f12,stroke:#facc15,color:#fefce8,font-weight:bold",
+        "    classDef locked fill:#334155,stroke:#94a3b8,color:#e2e8f0",
         "",
     ]
 
-    # Build the chain
-    for i, ch in enumerate(chapters):
-        if ch["completed"]:
-            prefix = "✅ "
-            cls = "completed"
-        elif i == current_chapter_index:
-            prefix = "★ "
-            cls = "current"
-        else:
-            prefix = "🔒 "
-            cls = "locked"
 
-        node_id = f"C{i}"
-        title = ch["title"]
-        lines.append(f"    {node_id}[\"{prefix}{title}\"]")
+def generate_mindmap(
+    topic: str,
+    prerequisites: Iterable[str] = (),
+    subunits: Iterable[str] = (),
+    completed: Iterable[str] = (),
+) -> str:
+    """Emit a renderer-safe, styled flowchart for a topic knowledge map.
 
-        if i > 0:
-            prev_id = f"C{i-1}"
-            lines.append(f"    {prev_id} --> {node_id}")
-
-    # Assign classes
-    for i, ch in enumerate(chapters):
-        node_id = f"C{i}"
-        if ch["completed"]:
-            lines.append(f"    class {node_id} completed")
-        elif i == current_chapter_index:
-            lines.append(f"    class {node_id} current")
-        else:
-            lines.append(f"    class {node_id} locked")
-
+    The public function keeps the historical name, but uses flowchart syntax
+    rather than Mermaid mindmap syntax because flowcharts have broader renderer
+    support and allow stable styling and status classes.
+    """
+    completed_set = {str(item) for item in completed}
+    prerequisites = list(prerequisites or ())
+    subunits = list(subunits or ())
+    lines = _diagram_header("TB")
+    lines.append(f'    ROOT["{_label(topic)}"]:::root')
+    prior: str | None = None
+    for group_index, (group_name, values) in enumerate(
+        (("Prerequisites", prerequisites), ("Sub-units", subunits))
+    ):
+        if not values:
+            continue
+        group_id = _node_id("G", group_index)
+        lines.append(f'    {group_id}["{group_name}"]:::group')
+        lines.append(f"    ROOT --> {group_id}")
+        for item_index, item in enumerate(values):
+            item_id = f"{group_id}I{item_index}"
+            status = "done" if str(item) in completed_set else "item"
+            lines.append(f'    {item_id}["{_label(item)}"]:::{status}')
+            lines.append(f"    {group_id} --> {item_id}")
+            prior = item_id
+    if prior is None:
+        lines.append("    ROOT -.-> EMPTY[\"Add prerequisites or sub-units\"]:::item")
     return "\n".join(lines)
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# Demo
-# ═══════════════════════════════════════════════════════════════════════════════
+def build_scientist_card(name: str, years: str, discovery: str, significance: str, human_detail: str, quote: str = "") -> dict:
+    return {
+        "type": "scientist_card", "name": name, "years": years,
+        "discovery": discovery, "significance": significance,
+        "human_detail": human_detail, "quote": quote,
+    }
+
+
+def render_scientist_card(card: Mapping[str, str], mode: str = "text") -> str:
+    if mode == "text":
+        quote = f'\n  Quote: "{card["quote"]}"' if card.get("quote") else ""
+        return (f"\n{'─' * 50}\n  CHARACTER CARD: {card['name']}\n"
+                f"  {card['discovery']}\n{'─' * 50}\n"
+                f"  Why it mattered: {card['significance']}\n"
+                f"  The person behind it: {card['human_detail']}{quote}\n{'─' * 50}\n")
+    quote_row = f"| **Quote** | {card['quote']} |\n" if card.get("quote") else ""
+    return (f"## {card['name']} ({card['years']})\n\n| Field | Detail |\n|---|---|\n"
+            f"| **Discovery** | {card['discovery']} |\n| **Why It Mattered** | {card['significance']} |\n"
+            f"| **The Person** | {card['human_detail']} |\n{quote_row}")
+
+
+def generate_skill_tree(chapters: list[dict], current_chapter_index: int = -1) -> str:
+    """Emit a styled, deterministic progression flowchart."""
+    lines = _diagram_header("LR")
+    if not chapters:
+        return "\n".join(lines + ['    EMPTY["No chapters yet"]:::locked'])
+    for index, chapter in enumerate(chapters):
+        completed = bool(chapter.get("completed"))
+        if completed:
+            prefix, style = "✓ ", "done"
+        elif index == current_chapter_index:
+            prefix, style = "◆ ", "current"
+        else:
+            prefix, style = "◇ ", "locked"
+        title = _label(chapter.get("title", f"Chapter {index + 1}"))
+        lines.append(f'    C{index}["{prefix}{title}"]:::{style}')
+        if index:
+            lines.append(f"    C{index - 1} --> C{index}")
+    return "\n".join(lines)
+
 
 if __name__ == "__main__":
-    print("=== build_analogy_seed('guitar') ===")
-    print(build_analogy_seed("guitar"))
-    print()
-    print("=== build_analogy_seed('underwater basket weaving') ===")
-    print(build_analogy_seed("underwater basket weaving"))
-    print()
-    print("=== core_truth demo ===")
-    print(core_truth("F = ma", "Push strength depends on weight and desired speed.",
-                      "Heavier things need more push to speed up the same amount."))
-    print()
-    print("=== generate_mindmap demo ===")
-    print(generate_mindmap(
-        topic="Rotational Mechanics",
-        prerequisites=["Linear Dynamics", "Torque"],
-        subunits=["Angular Velocity", "Moment of Inertia", "Angular Momentum"],
-        completed=["Angular Velocity"],
-    ))
-    print()
-    print("=== build_scientist_card demo ===")
-    card = build_scientist_card(
-        name="Theodore Lyman",
-        years="1874–1954",
-        discovery="Discovered the Lyman series — the UV spectral lines of hydrogen",
-        significance="Before Lyman, only visible spectral lines were understood — he showed hydrogen had structure at every energy level",
-        human_detail="A private gentleman who funded his own lab at Harvard — he never sought fame, which is why most people don't know his name despite his discovery being foundational",
-        quote="",
-    )
-    print(render_scientist_card(card, mode="text"))
-    print()
-    print("=== generate_skill_tree demo ===")
-    chapters = [
+    print("FHP:", fhp_mode_details())
+    print(generate_mindmap("Rotational Mechanics", ["Linear Dynamics", "Torque"], ["Angular Velocity", "Moment of Inertia"], ["Angular Velocity"]))
+    print(generate_skill_tree([
         {"title": "Linear Dynamics", "completed": True},
-        {"title": "Work & Energy", "completed": True},
         {"title": "Rotational Mechanics", "completed": False},
-        {"title": "Thermodynamics", "completed": False},
-        {"title": "Electrostatics", "completed": False},
-    ]
-    print(generate_skill_tree(chapters, current_chapter_index=2))
+    ], current_chapter_index=1))

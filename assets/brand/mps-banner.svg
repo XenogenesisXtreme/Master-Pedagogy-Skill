@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 520" role="img" aria-labelledby="title desc">
+  <title id="title">Master Pedagogy Skill banner</title>
+  <desc id="desc">A neon futuristic banner for a rigorous interactive learning engine.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#050816"/><stop offset=".55" stop-color="#11134a"/><stop offset="1" stop-color="#250b46"/></linearGradient>
+    <linearGradient id="neon" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#22d3ee"/><stop offset=".5" stop-color="#a855f7"/><stop offset="1" stop-color="#facc15"/></linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="12" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="#38bdf8" stroke-opacity=".1"/></pattern>
+  </defs>
+  <rect width="1600" height="520" rx="36" fill="url(#bg)"/>
+  <rect x="24" y="24" width="1552" height="472" rx="24" fill="url(#grid)"/>
+  <path d="M60 420C240 315 350 460 520 342S810 240 1000 360s360-18 540-142" fill="none" stroke="url(#neon)" stroke-width="7" opacity=".8" filter="url(#glow)"/>
+  <g transform="translate(104 115)"><circle cx="126" cy="126" r="112" fill="none" stroke="#22d3ee" stroke-width="7"/><ellipse cx="126" cy="126" rx="145" ry="57" fill="none" stroke="#a855f7" stroke-width="8" transform="rotate(-28 126 126)"/><circle cx="235" cy="54" r="11" fill="#facc15" filter="url(#glow)"/><text x="126" y="151" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="92" font-weight="800" fill="#f8fafc">MPS</text></g>
+  <text x="430" y="220" font-family="Inter,Segoe UI,sans-serif" font-size="68" font-weight="800" letter-spacing="5" fill="#f8fafc">MASTER PEDAGOGY</text>
+  <text x="436" y="286" font-family="Inter,Segoe UI,sans-serif" font-size="31" letter-spacing="8" fill="#67e8f9">RIGOR • DISCOVERY • MASTERY</text>
+  <text x="438" y="356" font-family="Inter,Segoe UI,sans-serif" font-size="24" fill="#c4b5fd">First-principles learning with adaptive quests, precise visuals, and FHP mode.</text>
+  <circle cx="1450" cy="104" r="6" fill="#22d3ee"/><circle cx="1480" cy="104" r="6" fill="#a855f7"/><circle cx="1510" cy="104" r="6" fill="#facc15"/>
+</svg>

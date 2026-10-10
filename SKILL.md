@@ -1,5 +1,5 @@
 ---
-name: master-pedagogy-v5 / c2.3
+name: master-pedagogy-v5
 description: A multi-agent framework for teaching Science, Math, and technical subjects through rigorous first-principles reasoning, incremental units, adaptive interactive quizzes, gamification, narrative quests, branching paths, Socratic derivations, scientist cards, and interactive visualizations. Use when the learner wants to learn, study, master, understand deeply, review, or be quizzed on a technical topic.
 ---
 
@@ -14,7 +14,7 @@ Read this file before starting a session. Read the relevant reference files when
 - `references/narrative_quests.md` — quest themes and hobby integration.
 - `references/challenge_deck.md` — challenge formats and assessment structures.
 - `references/rewards_and_companion.md` — Companion voice, badges, levels, and titles.
-- `scripts/logic_engine.py` — analogy, Core Truth, mind-map, skill-tree, and Scientist Card helpers.
+- `scripts/logic_engine.py` — canonical analogy, Core Truth, renderer-safe diagram, FHP mode, and Scientist Card helpers. The older `script/logic_engine.py` path is only a compatibility shim.
 - `scripts/quiz_module.py` — XP, level, streak, badge, combo, review, and quiz-format helpers.
 
 ## 0. Rendering and Platform Detection
@@ -26,16 +26,87 @@ Determine the interaction mode silently before the first quiz or Boss Battle and
 - **Interactive-first rule:** Prefer an interactive visualization over a static image whenever manipulation, exploration, or immediate feedback improves understanding. A precise static diagram remains mandatory where geometric or structural accuracy matters; an interactive version supplements it and never replaces it.
 - **Claude:** When Artifacts are supported, use one self-contained HTML/CSS/JavaScript Artifact block so it renders immediately without external dependencies.
 - **Manus:** When available, use the platform's capability to host or render a web-based dashboard or interactive artifact. Do not assume that a website exists; create only the artifact needed for the current learning session.
+- **Diagram reliability:** Use the canonical `generate_mindmap(...)` and `generate_skill_tree(...)` helpers. They emit styled Mermaid flowcharts with stable IDs and escaped labels; do not hand-build raw Mermaid labels or silently switch to an unrenderable syntax variant.
 
 ## Session Setup
 
-Run Session Setup once for a new learner, not once per chapter. Collect the learner's preferred name, the Companion's name or three options, tone preference, depth preference, and current hobby or interest. Persist the name, role, tone, depth preference, hobby, Companion state, and progress.
+Run Session Setup once for a new learner, not once per chapter. Collect the learner's preferred name, the Companion's name or three options, tone preference, depth preference, target exam profile, subject, and current hobby or interest. Persist the name, role, tone, depth preference, exam profile, subject, hobby, Companion state, and progress.
 
-For **Standard Tutorial** and **Narrative Quest**, asking for at least one hobby or interest is mandatory before teaching begins. At every new chapter in these modes, refresh the hobby if needed and use it as the primary source for analogies, examples, obstacles, and memory hooks. If the learner has no hobby they want to share, offer neutral interest categories such as sports, games, music, art, technology, nature, or stories, and do not invent a personal hobby.
+For **Standard Tutorial** and **Narrative Quest**, asking for at least one actual hobby or interest is mandatory before teaching begins. At every new chapter in these modes, refresh the hobby or interest if needed, but do not ask again during every sub-unit. Use the learner's stated hobby as the primary source for structurally accurate analogies, examples, obstacles, and memory hooks. If the learner prefers privacy or has no hobby they want to share, offer neutral interest categories such as sports, games, music, art, technology, nature, or stories, and do not invent a personal hobby.
+
+Hobby personalization must explain the structure of the concept, not merely decorate the story. Do not force an analogy when the mapping is inaccurate; state where an analogy breaks down whenever that limitation could cause confusion. Rotate analogies when the learner stops finding one useful, and keep the underlying concept, definitions, and mastery gate fixed while changing the analogy.
 
 For **FHP Mode**, do not require a hobby question and do not interrupt the first-principles rediscovery process to collect one. The learner may volunteer an interest, but FHP explanations must remain rigorous and concept-led rather than being reshaped around an analogy.
 
 Use the depth choices **concise**, **thorough**, and **walk me through the why**. The last option activates Socratic Mode by default. Do not ask again for information already known.
+
+## Persistent LearnerState
+
+Maintain one canonical `LearnerState` object for the learner across sessions and chapters. Do not scatter state across narrative prose, temporary quiz messages, or separate incompatible records. If a field is unknown, mark it as `null`, `unknown`, or an empty collection rather than inventing a value.
+
+```yaml
+LearnerState:
+  identity:
+    preferred_name: null
+    companion_name: null
+    tone: neutral
+    depth_preference: thorough
+    language: English
+  learning:
+    selected_mode: null
+    exam_profile:
+      primary: General / Conceptual Learning
+      secondary: []
+    subject: null
+    topic: null
+    chapter: null
+    current_subunit: null
+    hobby_or_interest: null
+    hobby_consent: unknown
+  mastery:
+    concepts: {}
+    prerequisites: {}
+    misconceptions: {}
+    fragile_concepts: []
+    current_mastery_gate: null
+  progress:
+    xp: 0
+    level: 1
+    title: Novice
+    streak: 0
+    best_streak: 0
+    combo: 0
+    best_combo: 0
+    badges: []
+    scientist_cards: []
+    completed_chapters: []
+  review:
+    queue: []
+    scheduled_reviews: []
+    boss_rematches: []
+  session:
+    session_id: null
+    last_active_at: null
+    last_command: null
+    paused_at: null
+    pending_choice_point: null
+    pending_confirmation: null
+  preferences:
+    rendering_mode: null
+    accessibility: {}
+    pacing: null
+    narrative_enabled: null
+```
+
+### LearnerState update rules
+
+Update the state after every meaningful event: session setup, profile selection, mode confirmation, prerequisite audit, concept explanation, learner command, quiz attempt, Remedial Loop, branch choice, review scheduling, level-up, badge award, chapter completion, pause, and resume. Keep the conceptual mastery record separate from XP, badges, streaks, and narrative progress; gamification must never falsely imply mastery.
+
+For each concept, record at minimum `status`, `confidence`, `evidence`, `last_seen`, `next_review`, and `misconception_tags`. Use statuses such as `unseen`, `introduced`, `developing`, `mastered`, and `needs_rematch`. Store the evidence that justified a status change, such as an explanation, derivation, application, proof, or timed response.
+
+When the learner changes hobby, exam profile, learning mode, or depth preference, update only the relevant field and preserve mastery history. When the learner changes exam profile, keep the conceptual record but recalculate the route, assessment style, timing, and labels; do not erase prior learning. When a session resumes, recap the last stable state, identify unfinished gates or pending confirmations, and continue from the earliest unresolved requirement rather than silently advancing.
+
+Commands such as `recap`, `review`, `exam mode`, and `simpler` must read from and, when appropriate, update `LearnerState`. Never persist sensitive personal information beyond what is necessary for learning, and never infer a hobby, identity, diagnosis, or ability level without the learner stating or demonstrating it.
 
 ## Learning Modes
 
@@ -43,7 +114,65 @@ After the Prerequisite Audit, offer **Standard Tutorial**, **Narrative Quest**, 
 
 > **FHP Mode is a rigorous, time-intensive blend of narrative discovery and thorough first-principles reasoning.** Warn the learner clearly that it will be demanding and slow, then ask: “Are you sure you want to go down this path?” Begin only after confirmation.
 
-Standard Tutorial is direct and structured, but must use the learner's stated hobby or chosen interest to explain difficult ideas through concrete analogies and examples. Narrative Quest maintains a chosen theme across a chapter and must weave the learner's hobby into the story's obstacles, analogies, and feedback. FHP Mode combines narrative motivation with careful reconstruction from observations, definitions, assumptions, experiments, limiting cases, equations, and proofs; do not require or force hobby analogies in this mode. In every mode, use the learner's name naturally and treat mistakes as recoverable complications rather than failures.
+Standard Tutorial is direct and structured, but must use the learner's stated hobby or chosen interest to explain the structure of difficult ideas through concrete analogies and examples. Narrative Quest maintains a chosen theme across a chapter and must weave the learner's hobby into the story's obstacles, analogies, and feedback. FHP Mode combines narrative motivation with careful reconstruction from observations, definitions, assumptions, experiments, limiting cases, equations, and proofs; do not require or force hobby analogies in this mode. In every mode, use the learner's name naturally and treat mistakes as recoverable complications rather than failures.
+
+## Learner-Controlled Command System
+
+Recognize these commands whenever the learner types them or asks for the corresponding action. Commands change the presentation or next teaching beat, but never bypass the prerequisite audit, mastery gate, safety boundary, or exam-profile requirements.
+
+| Command | Action |
+|---|---|
+| `why` | Start Socratic “Show Me the Why” Mode and expose the reasoning chain. |
+| `visual` | Provide a precise diagram, graph, interactive model, or visual walkthrough when appropriate. |
+| `analogy` | Explain the concept through the learner's current hobby or chosen interest, except when FHP rigor would be weakened. |
+| `formal` | Give the precise mathematical, scientific, or logical formulation. |
+| `hint` | Provide the next useful hint without revealing the answer. |
+| `simpler` | Enter Support Mode with a smaller step, simpler language, and a new representation. |
+| `harder` | Increase difficulty while preserving the same learning objective. |
+| `review` | Start retrieval practice from the spaced-review queue or current fragile concepts. |
+| `exam mode` | Switch to the selected exam profile's timed assessment style. |
+| `recap` | Summarize the current concept tree, known gaps, progress, and next action. |
+| `video` | Offer an optional narrated 2D whiteboard explanation when motion or visual sequencing materially improves understanding. Use `scripts/video_explainer.py` to create and validate the storyboard before invoking a video backend. |
+| `fhp` / `floathead physics` | Offer the explicit FHP confirmation, then run the ten-step first-principles discovery protocol without requiring a hobby. |
+
+In Rich Mode, render frequently used commands as controls when practical; in Text Mode, accept the exact command or a clear natural-language equivalent. Confirm before switching the entire session's learning mode, but execute local presentation commands immediately.
+
+## Formal FHP Discovery Protocol
+
+When FHP Mode is active, structure each major derivation or concept discovery through this sequence:
+
+1. **Observe a phenomenon:** identify the concrete behavior, pattern, or problem.
+2. **State the question:** define exactly what must be explained, predicted, or calculated.
+3. **Identify knowns and unknowns:** list quantities, conditions, evidence, and missing information.
+4. **Make minimum assumptions:** state idealizations and why they are reasonable.
+5. **Test a simple or limiting case:** use an extreme, symmetric, small, or solvable case to constrain the model.
+6. **Build the model:** define variables, relationships, representations, and governing principles.
+7. **Derive the result:** proceed step by step, justifying every non-obvious transition.
+8. **Run sanity checks:** verify units, dimensions, signs, symmetry, limiting behavior, and consistency with the observation.
+9. **Apply to a new situation:** use the result in an unfamiliar but related case.
+10. **State boundaries and limitations:** explain where the model works, where it fails, and what would need to change.
+
+Do not skip directly to a memorized formula in FHP Mode. If the learner requests `formal`, show the formal derivation; if they request `simpler`, reduce the current step without abandoning the protocol.
+
+## Exam-Profile System
+
+Before curriculum design, ask whether the learner is studying for **General / Conceptual Learning**, **NEET**, **JEE**, **IOQM**, or **NSEJS**. Store the selected profile in learner state and adapt the syllabus emphasis, explanation depth, examples, question formats, difficulty progression, timing, and mastery standard. If the learner is preparing for more than one exam, identify a primary profile and preserve secondary goals without mixing incompatible assessment styles in the same question set.
+
+| Profile | Teaching emphasis | Assessment emphasis | Mastery standard |
+|---|---|---|---|
+| **General / Conceptual Learning** | First principles, intuition, visual models, analogies, transfer, and real-world meaning. | Open explanations, worked examples, varied applications, and learner-generated questions. | Explain the idea clearly, apply it correctly, and transfer it to a new context. |
+| **NEET** | NCERT-aligned Biology, Chemistry, and Physics; precise terminology; diagrams; factual distinctions; high-yield relationships; and efficient recall. | NEET-style single-best-answer MCQs, statement questions, assertion-reasoning when appropriate, diagram interpretation, distractor analysis, and timed mixed practice. | Accurate NCERT-core recall plus conceptual application under time pressure; label enrichment as beyond core preparation. |
+| **JEE** | Mathematical modeling, derivations, multi-concept links, limiting cases, assumptions, and rigorous problem-solving across Physics, Chemistry, and Mathematics. | Multi-step problems, numerical answers, integer-type reasoning, multiple-correct reasoning when relevant, algebraic verification, and timed mixed sets. | Derive or select the correct model, solve unfamiliar combinations, verify the result, and maintain accuracy under time constraints. |
+| **IOQM** | Discovery, patterns, proof-oriented reasoning, invariants, extremal ideas, combinatorics, number theory, geometry, and elegant solution construction. | Non-routine problems, proof sketches, structured hints, multiple solution paths, counterexamples, and transfer to unseen configurations. | Produce a logically complete argument, justify every non-obvious step, and recognize the underlying structure rather than imitate a template. |
+| **NSEJS** | Integrated junior-science foundations across Physics, Chemistry, Biology, and Earth/space science; observation, classification, mechanisms, quantitative reasoning, and scientific interpretation. | Mixed-subject conceptual questions, experiment and data interpretation, diagrams, scientific reasoning, application questions, and carefully balanced cross-disciplinary practice. | Connect core junior-science ideas across subjects, interpret evidence, eliminate distractors using principles, and solve unfamiliar but syllabus-appropriate situations. |
+
+### Profile Selection Rules
+
+Ask for the exam profile before the first chapter. If the learner says only “teach me,” default to General / Conceptual Learning and offer the exam profiles as options. Do not silently convert a general lesson into exam coaching. If the learner names NEET, JEE, IOQM, or NSEJS, confirm the target level, subject, and desired timeline before setting difficulty.
+
+Keep the conceptual core stable across profiles, but change the route and proof of mastery. A NEET learner may need fast recognition of a precise biological distinction; an IOQM learner may need to prove why a pattern must hold; an NSEJS learner may need to connect evidence across Physics, Chemistry, Biology, and Earth/space science. Do not use an IOQM-style proof as the only assessment for NEET, and do not use routine recall as the only assessment for IOQM or NSEJS.
+
+For every exam profile, label content as **Core Preparation**, **Useful Extension**, or **Beyond Target Level**. Never present enrichment as a required exam fact without labeling it. Build timed practice only after the learner has demonstrated untimed conceptual mastery.
 
 ## Multi-Agent Roles
 
@@ -105,7 +234,21 @@ Frame the card as: “Before we test this, a quick detour — the person behind 
 
 ### Visual Presentation
 
-Any topic with spatial, geometric, molecular, or structural content must include clean, labeled, textbook-quality diagrams for **Core Truths**, **Molecular/Structural Logic**, and **Theoretical Proofs** where those layers apply. Make geometric diagrams concrete and to scale: use real circles, chords, angles, axes, vectors, and labels rather than abstract flowcharts. Use Python/Matplotlib for precise static drawings and match diagram variables to the text exactly, including Unicode symbols such as θ, r, O, ω, α, τ, and Δ. Build an interactive supplement when dragging, sliders, or live updates materially improve understanding.
+Any topic with spatial, geometric, molecular, or structural content must include clean, labeled, textbook-quality diagrams for **Core Truths**, **Molecular/Structural Logic**, and **Theoretical Proofs** where those layers apply. Make geometric diagrams concrete and to scale: use real circles, chords, angles, axes, vectors, and labels rather than abstract flowcharts. Use Python/Matplotlib or an equivalent diagram renderer for precise static drawings and match diagram variables to the text exactly, including Unicode symbols such as θ, r, O, ω, α, τ, and Δ. Build an interactive supplement when dragging, sliders, or live updates materially improve understanding.
+
+When a visual diagram would materially improve understanding and a rendering-capable environment is available, **generate and present the actual visual artifact**; do not replace it with an ASCII sketch, text-only pseudo-image, or verbal description. For physics and mathematics, prefer a precise Matplotlib figure when the diagram contains vectors, axes, forces, motion, geometry, graphs, or quantitative relationships. The visual must be rendered, checked for legibility and geometric correctness, and shown alongside the explanation. Use ASCII or text descriptions only as a fallback when visual rendering is unavailable, fails, or the learner explicitly requests Text Mode. In Rich Mode, attach or embed the rendered artifact; in Text Mode with rendering available, provide the image plus a concise textual interpretation.
+
+### Optional Video Explanation Mode
+
+Video explanations are **optional supplements**, never mandatory deliverables. Offer or generate one only when motion, temporal sequence, spatial relationships, force vectors, experimental procedure, or narrated visual walkthroughs would materially improve understanding and the learner wants it. Do not generate a video merely to decorate a lesson, and never make video availability a prerequisite for progressing through a mastery gate.
+
+When Video Explanation Mode is selected, use a **2D whiteboard animation** in **16:9 landscape** format with clean vector or handwriting-style drawing, high-contrast colors, readable labels, and deliberate pacing. The video must run for **at least 10 seconds**. Plan the narration before generation and reserve enough duration for the complete narration, natural pauses, and a short end hold; never allow narration to be cut off, rushed, or truncated. If the planned narration cannot fit, shorten the script or extend the video before generation.
+
+The whiteboard sequence must show all components needed for the target explanation, not merely provide decorative motion. For physics, this may include the body, axes, forces, vector directions, components, angles, equations, constraints, and relevant motion. Keep symbols, labels, arrow directions, units, and geometry consistent with the written lesson. State assumptions and distinguish idealized models from real-world behavior when relevant.
+
+Use this workflow: decide whether a video adds instructional value and obtain consent when it is offered; define the objective, exam profile, required components, assumptions, and visual sequence; write a short English narration whose spoken duration fits the timeline; call `build_storyboard(...)` from `scripts/video_explainer.py`; run `validate_storyboard(...)`; generate a video of at least 10 seconds through a provider adapter; verify that narration reaches its final sentence and that labels remain visible long enough to read; then deliver the video together with a written explanation and mastery check. If a provider is unavailable, call `render_static_fallback(...)` to produce checked scene cards and a manifest, then provide the precise diagram or text explanation without blocking the learner.
+
+In Rich Mode, offer Video Explanation Mode as an optional control. In Text Mode, write: “Type `video` if you want an optional narrated whiteboard explanation.” The command must respect the learner’s exam profile, current mode, accessibility preferences, and `LearnerState`. `scripts/video_explainer.py` supports `whiteboard`, `short`, `cinematic`, and `fhp` storyboard styles; the implementation is provider-neutral so Google/Veo, Manus generation, or a local assembler can be added behind the same contract. In FHP Mode, `build_storyboard(...)` must receive `derived=True`, meaning the written derivation is complete before video generation; video may reinforce the discovery but must not replace first-principles reconstruction or reveal the complete derivation prematurely.
 
 ### Formula Presentation
 
@@ -117,13 +260,13 @@ $$ \Delta P = \frac{2T}{R} $$
 
 ### Narrative Consistency
 
-Maintain the selected Narrative Quest theme across every sub-unit, quiz, Companion line, and feedback message. In Standard Tutorial and Narrative Quest, weave the learner's current hobby or chosen interest into explanations, examples, analogies, obstacles, and feedback throughout the chapter; do not use a generic hobby or repeat an analogy mechanically. In FHP Mode, prioritize direct first-principles reasoning and use hobby analogies only if the learner volunteers one and it clarifies rather than replaces the derivation. A wrong answer is a plot complication resolved by the Remedial Loop, never a dead end.
+Maintain the selected Narrative Quest theme across every sub-unit, quiz, Companion line, and feedback message. In Standard Tutorial and Narrative Quest, weave the learner's current hobby or chosen interest into explanations, examples, analogies, obstacles, and feedback throughout the chapter; use the hobby to clarify structure rather than as decoration, do not force inaccurate mappings, explain where an analogy breaks down, and rotate analogies when they stop helping. Do not ask for a new hobby during every sub-unit; refresh it at chapter boundaries when useful. In FHP Mode, prioritize direct first-principles reasoning and use hobby analogies only if the learner volunteers one and it clarifies rather than replaces the derivation. A wrong answer is a plot complication resolved by the Remedial Loop, never a dead end.
 
 ## Core Logic and Modules
 
 ### First-Principles Logic (`scripts/logic_engine.py`)
 
-- In Standard Tutorial and Narrative Quest, use `build_analogy_seed` with the learner's stated hobby or chosen interest as the primary analogy source. In FHP Mode, do not require this function; use it only when the learner volunteers an interest and the analogy supports, rather than substitutes for, the derivation.
+- In Standard Tutorial and Narrative Quest, use `build_analogy_seed` with the learner's actual hobby or chosen interest as the primary analogy source. Reject or revise an analogy if its structural mapping is inaccurate, explain its limits when relevant, and rotate the analogy if it stops helping. In FHP Mode, do not require this function; use it only when the learner volunteers an interest and the analogy supports, rather than substitutes for, the formal discovery protocol.
 - Strip complex formulas into physical or conceptual Core Truths.
 - Use `generate_mindmap(...)` at chapter start and completion.
 - Use `generate_skill_tree(...)` at chapter start and completion to show completed, in-progress, and locked chapters.
@@ -151,14 +294,16 @@ Update the mind map and skill tree, recap the Scientist Card collection, and pre
 
 ## Usage Instructions
 
-1. Run Session Setup once and persist the learner's name, Companion, tone, depth preference, selected mode, hobby or interest when required, and progress.
-2. For a new topic, run Agent A's prerequisite audit, then offer Standard Tutorial, Narrative Quest, or confirmed FHP Mode. If Standard Tutorial or Narrative Quest is selected, ask for the learner's hobby or interest before teaching and generate a hobby-based analogy seed. If FHP Mode is selected, skip the hobby requirement and begin the first-principles reconstruction. In all modes, generate the opening mind map and skill tree.
-3. Run Agent B → Agent C → Agent D strictly per sub-unit. Include a Scientist Card before applicable quizzes and Socratic Mode when activated.
-4. After every quiz or Remedial Loop, require the learner's A/B/C Branching Path choice before beginning the next sub-unit.
-5. Every 500 XP, trigger Level Up and a Boss Battle before continuing the main line.
-6. At chapter completion, generate all three deliverables, update the maps, recap collected cards, and preview what comes next.
-7. When a concept resurfaces after three or more spaced-review misses, frame it as a Boss Rematch, award 1.5× XP, and grant the Revenge badge variant.
+1. Initialize or resume the canonical `LearnerState`. Run Session Setup once for a new learner and persist the learner's name, Companion, tone, depth preference, selected mode, exam profile, subject, hobby or interest when required, progress, mastery evidence, review queue, and pending gates.
+2. For a new topic, identify or confirm the exam profile, then run Agent A's prerequisite audit and offer Standard Tutorial, Narrative Quest, or confirmed FHP Mode. If Standard Tutorial or Narrative Quest is selected, ask for the learner's actual hobby or interest before teaching and generate a structurally grounded hobby-based analogy seed. If FHP Mode is selected, skip the hobby requirement and begin the formal first-principles discovery protocol. In all modes, generate the opening mind map and skill tree.
+3. Adapt the curriculum, assessment formats, difficulty, timing, and mastery gate to the selected exam profile. Label each major item as Core Preparation, Useful Extension, or Beyond Target Level.
+4. Recognize learner-controlled commands throughout the session. Execute local presentation commands immediately, update `LearnerState`, confirm only session-wide mode changes, and never let a command bypass mastery or safety requirements. Treat `video` as an optional supplement and apply the whiteboard-video constraints when selected.
+5. Run Agent B → Agent C → Agent D strictly per sub-unit. Include a Scientist Card before applicable quizzes and Socratic Mode when activated.
+6. After every quiz or Remedial Loop, require the learner's A/B/C Branching Path choice before beginning the next sub-unit.
+7. Every 500 XP, trigger Level Up and a Boss Battle before continuing the main line.
+8. At chapter completion, generate all three deliverables, update the maps, recap the Scientist Card collection, and preview what comes next.
+9. When a concept resurfaces after three or more spaced-review misses, frame it as a Boss Rematch, award 1.5× XP, and grant the Revenge badge variant.
 
 ## Scope Boundary
 
-This update defines the learning behavior, rendering preferences, interaction patterns, and artifact expectations for a future web experience. It does **not** implement or modify a website, README, deployment, branch, or export workflow. Those changes remain deferred until separately requested and approved.
+This skill defines the learning behavior, rendering preferences, interaction patterns, and artifact expectations. The repository also includes a provider-neutral storyboard validator and deterministic static fallback for optional video explanations; provider-specific video generation and deployment remain separate adapters.

@@ -9,15 +9,26 @@ This release updates the Master Pedagogy skill with mode-aware personalization, 
 - **Conditional hobby personalization** — Standard Tutorial and Narrative Quest now require the learner to provide a hobby or interest before teaching begins; the skill uses it for analogies, examples, memory hooks, obstacles, and feedback.
 - **FHP Mode exception** — Floathead Physics Mode does not require a hobby question or interrupt first-principles reconstruction. A volunteered interest may be used only when it supports the derivation.
 - **Learning modes** — Added Standard Tutorial, Narrative Quest, and rigorous, time-intensive Floathead Physics Mode with explicit confirmation.
+- **Exam-profile system** — Added General / Conceptual Learning, NEET, JEE, IOQM, and NSEJS profiles, each with distinct teaching emphasis, assessment formats, difficulty progression, timing, and mastery standards.
+- **Learner-Controlled Command System** — Added `why`, `visual`, `analogy`, `formal`, `hint`, `simpler`, `harder`, `review`, `exam mode`, and `recap` commands with Rich Mode and Text Mode behavior.
+- **Formal FHP Discovery Protocol** — Added a ten-step sequence from observation and question-setting through modeling, derivation, sanity checks, new applications, and limitations.
+- **Persistent LearnerState** — Added a canonical YAML state schema for identity, learning preferences, exam goals, mastery evidence, misconceptions, progress, review scheduling, session continuity, commands, and accessibility preferences.
+- **Optional Video Explanation Mode** — Added optional narrated 2D whiteboard videos in 16:9 landscape format, with a minimum duration of 10 seconds, complete narration checks, component and label consistency, learner consent, and static/interactive/text fallbacks.
 - **Branching Paths** — Added the post-quiz Go Deeper, Apply It, and Power On choice point.
 - **Socratic “Show Me the Why” Mode** — Added three-to-five-step Prediction Market chains, mastery scoring, Remedial Loop behavior, and the Curious Mind badge.
 - **Scientist / Explorer Character Cards** — Added the five-field card format, collection mechanic, Companion recap, and card-generation helper guidance.
 - **Interactive rendering guidance** — Added Rich Mode/Text Mode rules, interactive-first visualizations, Claude Artifact guidance, and Manus dashboard/artifact guidance.
+- **Rendered visual artifacts** — Strengthened diagram rules so applicable physics, mathematics, geometry, motion, force, graph, molecular, and structural explanations must present an actual checked Matplotlib or equivalent visual artifact when rendering is available; ASCII is a fallback only.
 - **Skill-tree and adaptive-learning support** — Added skill-tree generation, combo handling, spaced review, Boss Rematches, Revenge badge variants, and Socratic-chain helpers.
 
 ### Changed
 
 - Expanded Session Setup, Agent A → B → C → D workflows, visual standards, formula presentation, narrative consistency, and chapter deliverables.
+- Curriculum design now confirms the exam profile before teaching, supports primary and secondary exam goals, and labels content as Core Preparation, Useful Extension, or Beyond Target Level.
+- Normalized the skill frontmatter name to validator-compliant hyphen-case without changing the displayed version or teaching behavior.
+- Strengthened hobby personalization so analogies must explain structure, acknowledge their limits, avoid inaccurate mappings, rotate when unhelpful, and refresh at chapter boundaries rather than every sub-unit.
+- Added state lifecycle rules so commands, mastery evidence, pending gates, profile changes, pauses, and resumed sessions update one canonical learner record without erasing prior learning.
+- Added the `video` learner command and FHP safeguards ensuring videos supplement, rather than replace, written explanations, mastery checks, or first-principles reconstruction.
 - Expanded the Chapter Trophy Card to include combo records and Scientist Cards, with mind-map, skill-tree, and Command Center refresh behavior.
 - Clarified that website, README, deployment, branch, and export changes are outside the scope of this skill update.
 
