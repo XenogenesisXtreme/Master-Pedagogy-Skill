@@ -1,9 +1,9 @@
 ---
-name: master-pedagogy-v5
+name: master-pedagogy-v6-c3-8
 description: A multi-agent framework for teaching Science, Math, and technical subjects through rigorous first-principles reasoning, incremental units, adaptive interactive quizzes, gamification, narrative quests, branching paths, Socratic derivations, scientist cards, and interactive visualizations. Use when the learner wants to learn, study, master, understand deeply, review, or be quizzed on a technical topic.
 ---
 
-# Master Pedagogy Skill v5 / c2.3 — The Ultimate Pedagogy Engine
+# Master Pedagogy Skill v6-c3.8 — The Ultimate Pedagogy Engine
 
 Use this framework to turn rigorous mastery into an engaging, adaptive learning journey. **Fun never replaces mastery:** every sub-unit still ends with a genuine understanding gate, while narrative, choice, visuals, feedback, and recoverable setbacks make sustained effort easier.
 

@@ -1,6 +1,17 @@
 # Changelog
 
-## v5 / c2.3 — Conditional Hobby-Based Analogy Rules (Current Version)
+## v6-c3.8 — Exam-Aware Mastery and Learner Controls (Current Version)
+
+This release names the merged exam-profile edition v6-c3.8 and aligns the skill metadata and repository documentation with that release. It retains the teaching features and helpers described below; the version-label update does not itself change runtime behavior.
+
+### Release notes
+
+- Standardized the active skill identity and documentation on **v6-c3.8**.
+- Retained exam profiles, the `LearnerState` specification, learner commands, and the ten-step FHP discovery protocol.
+- Retained reliable diagram helpers, the legacy import shim, video storyboard validation, and the SVG scene-card fallback.
+- Clarified that persistent learner storage and actual video generation require host-provided infrastructure or a provider backend.
+
+## v5 / c2.3 — Conditional Hobby-Based Analogy Rules (Historical; included in v6-c3.8)
 
 This release updates the Master Pedagogy skill with mode-aware personalization, stronger first-principles learning workflows, and expanded interactive learning mechanics.
 

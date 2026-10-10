@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-quiz_module.py — Gamification math + quiz logistics for Master Pedagogy v5 (XG Edition).
+quiz_module.py — Gamification math + quiz logistics for Master Pedagogy v6-c3.8 (XG Edition).
 
 Single source of truth for anything numeric: XP totals, levels, streaks, badges,
 combo multipliers, Boss Rematch flagging, Socratic chain generation, which Challenge

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reusable helpers for Master Pedagogy v5.
+"""Reusable helpers for Master Pedagogy v6-c3.8.
 
 The module is dependency-free and intentionally keeps diagram output as Mermaid
 source. The emitted diagrams use stable IDs, escaped labels, and explicit theme

@@ -1,4 +1,4 @@
-# Master Pedagogy Skill
+# Master Pedagogy Skill v6-c3.8
 
 An adaptive, mastery-gated tutoring framework for Science, Mathematics, and technical subjects. It combines first-principles teaching with exam-aware curricula, interactive learning mechanics, narrative options, and reusable helper scripts.
 
