@@ -17,7 +17,7 @@ The skill is designed for agent clients that can load `SKILL.md` (including Clau
 - **Persistent-state specification:** a canonical `LearnerState` schema for preferences, exam goals, mastery evidence, misconceptions, review scheduling, and session continuity.
 - **Gamification:** XP, levels, streaks, combos, badges, Boss Battles and Rematches, branching paths, Scientist / Explorer Cards, and spaced review.
 - **Visual support:** renderer-safe Mermaid mind maps and skill trees, plus instructions to create and check actual diagrams when rendering is available.
-- **Optional video planning:** validated 16:9 storyboard generation and SVG scene-card fallback for lessons where motion or sequence helps.
+- **Optional video planning:** validated 16:9 storyboard generation with Cinematic as the default, explicit Whiteboard/Short/FHP overrides, learner-consented analogies, automatic video-profile inference, and SVG scene-card fallback for lessons where motion or sequence helps.
 
 ## Exam profiles
 
@@ -39,7 +39,7 @@ Content is labeled **Core Preparation**, **Useful Extension**, or **Beyond Targe
 - **Narrative Quest** — the same learning and mastery gates within a persistent story theme.
 - **Floathead Physics (FHP)** — a rigorous, time-intensive rediscovery path. It requires explicit learner confirmation and does not require a hobby analogy. Its protocol moves from observation and question-setting through assumptions, limiting cases, modeling, derivation, checks, application, and limitations.
 
-Learners can request local changes at any point—for example, `hint`, `simpler`, or `formal`. Commands change the teaching approach, not the underlying prerequisites or mastery requirements. `exam mode` applies the selected profile's assessment style; `video` offers an optional visual supplement when useful.
+Learners can request local changes at any point—for example, `hint`, `simpler`, or `formal`. Commands change the teaching approach, not the underlying prerequisites or mastery requirements. `exam mode` applies the selected profile's assessment style; `video` offers an optional visual supplement when useful. Video defaults to Cinematic, while `video whiteboard`, `video short`, and `video fhp` remain explicit overrides.
 
 ## LearnerState and persistence
 
@@ -86,15 +86,13 @@ storyboard = build_storyboard(
     objective="Relate net force, mass, and acceleration.",
     narration="Observe the motion. Define the variables. Derive the relationship. Check the units.",
     mastery_check="Predict how acceleration changes when net force doubles.",
-    exam_profile="JEE",
-    style="whiteboard",
     equations=["F = ma"],
     derived=True,
 )
 render_static_fallback(storyboard, "build/video-scenes")
 ```
 
-FHP video storyboards require `derived=True` so a video supplements a completed written derivation rather than replacing it.
+Video storyboards default to `style="cinematic"`, enforce `aspect_ratio="16:9"`, and accept durations from 15 to 45 seconds. The video module infers a suitable profile from the topic when `exam_profile` is omitted; this is a presentation choice and does not replace full curriculum profile selection. If a learner has provided an interest, pass it as `learner_interest` and set `analogy_consent=True` only after asking permission to use it. FHP video storyboards require `derived=True` so a video supplements a completed written derivation rather than replacing it.
 
 ## Installation and activation
 
