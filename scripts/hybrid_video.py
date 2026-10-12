@@ -25,6 +25,7 @@ from typing import Callable
 
 from PIL import Image, ImageDraw, ImageFont
 
+from scripts.production_manifest import make_manifest, select_provider
 from scripts.video_explainer import Storyboard, render_static_fallback, validate_storyboard
 
 WIDTH, HEIGHT = 1280, 720
@@ -40,6 +41,7 @@ class RenderResult:
     audio: bool
     fallback_assets: list[Path]
     errors: list[str]
+    quality_gates: list[str]
 
     def to_dict(self) -> dict:
         return {
@@ -50,6 +52,7 @@ class RenderResult:
             "audio": self.audio,
             "fallback_assets": [str(path) for path in self.fallback_assets],
             "errors": self.errors,
+            "quality_gates": self.quality_gates,
         }
 
 
@@ -146,7 +149,7 @@ def _draw_frame(storyboard: Storyboard, frame_index: int, total_frames: int) -> 
     scene = storyboard.scenes[scene_index]
     local_progress = (global_progress * scene_count) - scene_index
 
-    draw.text((54, 36), f"MASTER PEDAGOGY • CINEMATIC LOCAL • {scene.id}", fill="#67e8f9", font=_font(22, True))
+    draw.text((54, 36), f"MASTER PEDAGOGY • CINEMATIC • {scene.id}", fill="#67e8f9", font=_font(22, True))
     draw.text((54, 78), storyboard.topic, fill="#f8fafc", font=_font(42, True))
     draw.text((54, 132), storyboard.exam_profile, fill="#c4b5fd", font=_font(23))
 
@@ -204,7 +207,7 @@ def render_local_cinematic(storyboard: Storyboard, output_path: str | Path, work
             "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(output),
         ]
         subprocess.run(command, check=True)
-        return RenderResult("local-cinematic", output, total_seconds, storyboard.aspect_ratio, False, [], [])
+        return RenderResult("local-cinematic", output, total_seconds, storyboard.aspect_ratio, False, [], [], ["storyboard validation", "16:9 dimensions", "15-45 second duration", "H.264 encode"])
     finally:
         if temp_context:
             temp_context.cleanup()
@@ -219,20 +222,26 @@ def render_hybrid(
 ) -> RenderResult:
     """Try local rendering, then an optional hosted adapter, then SVG fallback."""
     errors: list[str] = []
+    manifest = make_manifest(storyboard, hosted_available=hosted_renderer is not None)
     output = Path(output_path)
     try:
-        return render_local_cinematic(storyboard, output)
+        result = render_local_cinematic(storyboard, output)
+        select_provider(manifest, result.provider)
+        result.errors = errors
+        return result
     except Exception as exc:  # provider fallback is intentional and reported
         errors.append(f"local-cinematic: {exc}")
     if hosted_renderer:
         try:
             hosted_output = Path(hosted_renderer(storyboard, output))
-            return RenderResult("hosted-provider", hosted_output, sum(scene.duration for scene in storyboard.scenes), storyboard.aspect_ratio, True, [], errors)
+            select_provider(manifest, "hosted-provider")
+            return RenderResult("hosted-provider", hosted_output, sum(scene.duration for scene in storyboard.scenes), storyboard.aspect_ratio, True, [], errors, ["storyboard validation", "provider output exists"])
         except Exception as exc:
             errors.append(f"hosted-provider: {exc}")
     fallback_path = Path(fallback_dir or output.parent / f"{output.stem}-fallback")
     assets = render_static_fallback(storyboard, fallback_path)
-    return RenderResult("static-svg-fallback", None, sum(scene.duration for scene in storyboard.scenes), storyboard.aspect_ratio, False, assets, errors)
+    select_provider(manifest, "static-svg-fallback")
+    return RenderResult("static-svg-fallback", None, sum(scene.duration for scene in storyboard.scenes), storyboard.aspect_ratio, False, assets, errors, ["storyboard validation", "SVG assets generated"])
 
 
 def render_result_manifest(result: RenderResult, path: str | Path) -> Path:

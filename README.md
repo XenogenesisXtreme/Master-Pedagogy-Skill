@@ -57,6 +57,7 @@ Learners can request local changes at any point—for example, `hint`, `simpler`
 | [`scripts/video_explainer.py`](scripts/video_explainer.py) | Provider-neutral storyboard construction and validation; deterministic SVG scene cards and a manifest as a fallback | Lesson planning contract; rendering is handled by the hybrid adapter |
 | [`scripts/hybrid_video.py`](scripts/hybrid_video.py) | Local Cinematic MP4 renderer using precise Pillow frames and FFmpeg; hosted adapter hook; SVG fallback | Local path is intentionally deterministic and physics-first; Piper narration is optional and can be attached by a host |
 | [`scripts/video_pipeline.py`](scripts/video_pipeline.py) | Runnable rolling-bodies demo using the local-first provider order | Requires Python Pillow and FFmpeg for local MP4 output |
+| [`scripts/production_manifest.py`](scripts/production_manifest.py) | OpenMontage-inspired staged production manifest, provider decision log, and quality-gate contract | Reimplemented locally; no OpenMontage AGPL source is imported |
 | [`tests/`](tests/) | Unit tests for diagram/FHP helpers and storyboard/fallback behavior | Run with the command below |
 
 ## Quick start
@@ -103,7 +104,9 @@ python scripts/video_pipeline.py \
   --learner-interest "coding and game development"
 ```
 
-The provider order is **local deterministic renderer → optional hosted adapter → checked SVG fallback**. The local renderer produces a playable 16:9 H.264 MP4 with precise physics labels and motion. A host may add Piper narration when installed; if it is unavailable, the local output remains valid without narration rather than failing the lesson.
+The provider order is **local deterministic renderer → optional hosted adapter → checked SVG fallback**. The local renderer produces a playable 16:9 H.264 MP4 with precise physics labels and motion. A host may add Piper narration when installed; if it is unavailable, the local output remains valid without narration rather than failing the lesson. The command also writes a `.production.json` artifact containing the stage contract, selected provider, required tools, and quality gates, plus a `.manifest.json` render result.
+
+The architecture follows useful OpenMontage patterns—staged artifacts, explicit provider routing, render reports, and post-render QA—but is implemented independently so this repository does not absorb OpenMontage's AGPL code or licensing obligations.
 
 Video storyboards default to `style="cinematic"`, enforce `aspect_ratio="16:9"`, and accept durations from 15 to 45 seconds. The video module infers a suitable profile from the topic when `exam_profile` is omitted; this is a presentation choice and does not replace full curriculum profile selection. If a learner has provided an interest, pass it as `learner_interest` and set `analogy_consent=True` only after asking permission to use it. FHP video storyboards require `derived=True` so a video supplements a completed written derivation rather than replacing it.
 

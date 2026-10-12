@@ -11,6 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from scripts.hybrid_video import render_hybrid, render_result_manifest
+from scripts.production_manifest import make_manifest, select_provider
 from scripts.video_explainer import build_storyboard
 
 
@@ -44,7 +45,10 @@ def main() -> None:
     storyboard = rolling_bodies_storyboard(args.duration, args.learner_interest, args.analogy_consent)
     result = render_hybrid(storyboard, args.output)
     manifest = render_result_manifest(result, args.output.with_suffix(".manifest.json"))
-    print(json.dumps({"storyboard": storyboard.to_dict(), "render": result.to_dict(), "manifest": str(manifest)}, indent=2, ensure_ascii=False))
+    production = make_manifest(storyboard)
+    select_provider(production, result.provider)
+    production_path = production.write(args.output.with_suffix(".production.json"))
+    print(json.dumps({"storyboard": storyboard.to_dict(), "render": result.to_dict(), "manifest": str(manifest), "production_manifest": str(production_path)}, indent=2, ensure_ascii=False))
 
 
 if __name__ == "__main__":
