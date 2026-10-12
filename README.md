@@ -17,7 +17,7 @@ The skill is designed for agent clients that can load `SKILL.md` (including Clau
 - **Persistent-state specification:** a canonical `LearnerState` schema for preferences, exam goals, mastery evidence, misconceptions, review scheduling, and session continuity.
 - **Gamification:** XP, levels, streaks, combos, badges, Boss Battles and Rematches, branching paths, Scientist / Explorer Cards, and spaced review.
 - **Visual support:** renderer-safe Mermaid mind maps and skill trees, plus instructions to create and check actual diagrams when rendering is available.
-- **Optional video planning:** validated 16:9 storyboard generation with Cinematic as the default, explicit Whiteboard/Short/FHP overrides, learner-consented analogies, automatic video-profile inference, and SVG scene-card fallback for lessons where motion or sequence helps.
+- **Optional video planning:** validated 16:9 storyboard generation with Cinematic as the default, explicit Whiteboard/Short/FHP overrides, learner-consented analogies, automatic video-profile inference, a credit-free local MP4 renderer, hosted-provider fallback, and SVG scene-card fallback for lessons where motion or sequence helps.
 
 ## Exam profiles
 
@@ -54,7 +54,9 @@ Learners can request local changes at any point—for example, `hint`, `simpler`
 | [`scripts/logic_engine.py`](scripts/logic_engine.py) | Analogy seeds, Core Truth formatting, FHP mode resolution/details, deterministic Mermaid mind maps and skill trees, Scientist Card helpers | Exam-specific curriculum behavior and learner-state persistence are directed by `SKILL.md`; this module does not implement a full tutoring application |
 | [`script/logic_engine.py`](script/logic_engine.py) | Compatibility shim for older singular-path imports | Delegates to the canonical `scripts/` implementation |
 | [`scripts/quiz_module.py`](scripts/quiz_module.py) | XP, levels, streaks, badges, combo, challenge-format, review, and Socratic helpers | The host/agent orchestrates the session and stores learner state |
-| [`scripts/video_explainer.py`](scripts/video_explainer.py) | Provider-neutral storyboard construction and validation; deterministic SVG scene cards and a manifest as a fallback | **Does not generate an MP4 by itself.** A video provider or local rendering backend must be connected for actual video output |
+| [`scripts/video_explainer.py`](scripts/video_explainer.py) | Provider-neutral storyboard construction and validation; deterministic SVG scene cards and a manifest as a fallback | Lesson planning contract; rendering is handled by the hybrid adapter |
+| [`scripts/hybrid_video.py`](scripts/hybrid_video.py) | Local Cinematic MP4 renderer using precise Pillow frames and FFmpeg; hosted adapter hook; SVG fallback | Local path is intentionally deterministic and physics-first; Piper narration is optional and can be attached by a host |
+| [`scripts/video_pipeline.py`](scripts/video_pipeline.py) | Runnable rolling-bodies demo using the local-first provider order | Requires Python Pillow and FFmpeg for local MP4 output |
 | [`tests/`](tests/) | Unit tests for diagram/FHP helpers and storyboard/fallback behavior | Run with the command below |
 
 ## Quick start
@@ -91,6 +93,17 @@ storyboard = build_storyboard(
 )
 render_static_fallback(storyboard, "build/video-scenes")
 ```
+
+To render a credit-free local-first Cinematic MP4, use the hybrid demo:
+
+```bash
+python scripts/video_pipeline.py \
+  --output build/video-demo/rolling-bodies-hybrid.mp4 \
+  --duration 30 \
+  --learner-interest "coding and game development"
+```
+
+The provider order is **local deterministic renderer → optional hosted adapter → checked SVG fallback**. The local renderer produces a playable 16:9 H.264 MP4 with precise physics labels and motion. A host may add Piper narration when installed; if it is unavailable, the local output remains valid without narration rather than failing the lesson.
 
 Video storyboards default to `style="cinematic"`, enforce `aspect_ratio="16:9"`, and accept durations from 15 to 45 seconds. The video module infers a suitable profile from the topic when `exam_profile` is omitted; this is a presentation choice and does not replace full curriculum profile selection. If a learner has provided an interest, pass it as `learner_interest` and set `analogy_consent=True` only after asking permission to use it. FHP video storyboards require `derived=True` so a video supplements a completed written derivation rather than replacing it.
 
