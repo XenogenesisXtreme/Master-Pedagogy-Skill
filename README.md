@@ -110,6 +110,33 @@ The architecture follows useful OpenMontage patterns—staged artifacts, explici
 
 Video storyboards default to `style="cinematic"`, enforce `aspect_ratio="16:9"`, and accept durations from 15 to 45 seconds. The video module infers a suitable profile from the topic when `exam_profile` is omitted; this is a presentation choice and does not replace full curriculum profile selection. If a learner has provided an interest, pass it as `learner_interest` and set `analogy_consent=True` only after asking permission to use it. FHP video storyboards require `derived=True` so a video supplements a completed written derivation rather than replacing it.
 
+## Using Master Pedagogy in ChatGPT
+
+Master Pedagogy works exceptionally well in ChatGPT when its instructions are loaded into the conversation. ChatGPT can follow the skill's prerequisite audits, first-principles teaching, adaptive mastery gates, remediation, and learner-choice workflow. Optional capabilities—such as interactive widgets, generated media, or persistent progress across chats—depend on the tools and setup available in your ChatGPT experience.
+
+### Quick start in ChatGPT
+
+1. Open [ChatGPT](https://chatgpt.com/).
+2. Download or open [`SKILL.md`](SKILL.md) from this repository.
+3. Start a new chat and attach the `SKILL.md` file. If file upload is unavailable, paste its contents into the chat.
+4. Ask ChatGPT to read and follow the Master Pedagogy Skill for your learning session. For example:
+
+   > Use the attached Master Pedagogy Skill. Start by auditing my prerequisites for [topic]. My goal is [exam or learning goal], and I prefer [learning mode]. Follow its adaptive teaching and mastery-gate workflow.
+
+5. Continue the session normally. You can request controls such as `hint`, `simpler`, `harder`, `review`, `exam mode`, or `fhp` as appropriate.
+
+### Reuse it with a custom GPT
+
+For a reusable setup, create a custom GPT in ChatGPT (where GPT creation is available):
+
+1. Open the GPT builder from ChatGPT's GPTs area.
+2. Create a GPT and give it a name, such as **Master Pedagogy Tutor**.
+3. Add a concise instruction telling it to use the uploaded Master Pedagogy Skill as its tutoring framework, follow the prerequisite-audit and mastery-gate sequence, adapt to the learner's exam profile, and avoid claiming tools or persistent memory it does not have.
+4. Upload the repository's `SKILL.md` as a knowledge file. Add any supporting files you want it to use.
+5. Save the GPT and start a learning session.
+
+ChatGPT's interface and feature availability may vary by account and plan. A custom GPT's knowledge files provide reference material; they do not automatically grant code execution, external integrations, interactive widgets, video generation, or cross-chat learner-state persistence. Those capabilities require separate host support. For a quick one-off session, attaching `SKILL.md` to an ordinary chat is sufficient.
+
 ## Installation and activation
 
 Clone the repository:
