@@ -1,5 +1,11 @@
 # Master Pedagogy Skill v6-c3.8
 
+<p align="center">
+  <img src="assets/brand/master-pedagogy-system-banner.png" alt="Master Pedagogy System banner" width="100%">
+  <br>
+  <img src="assets/brand/master-pedagogy-system-icon.png" alt="Master Pedagogy System icon" width="112">
+</p>
+
 An adaptive, mastery-gated tutoring framework for Science, Mathematics, and technical subjects. It combines first-principles teaching with exam-aware curricula, interactive learning mechanics, narrative options, and reusable helper scripts.
 
 The skill is designed for agent clients that can load `SKILL.md` (including Claude and Manus). **Available behavior depends on the host:** interactive widgets, cross-session persistence, rendered visuals, and generated video require supporting tools or application infrastructure.
