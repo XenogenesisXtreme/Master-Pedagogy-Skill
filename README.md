@@ -19,6 +19,7 @@ The skill is designed for agent clients that can load `SKILL.md` (including Clau
 - **Exam profiles:** General / Conceptual Learning, NEET, JEE, IOQM, and NSEJS, with profile-specific teaching priorities, question formats, and mastery expectations.
 - **Three learning modes:** Standard Tutorial, Narrative Quest, and confirmed Floathead Physics (FHP) Mode.
 - **Adaptive mastery workflow:** prerequisite audits, incremental sub-units, quizzes, hints, remedial loops, support mode, and mastery gates.
+- **Default Intuitive Mastery:** intuition → physical understanding → concept → equation → application → mastery, with focused micro-lessons, transparent problem solving, error diagnosis, and five evidence-based difficulty levels.
 - **Learner controls:** `why`, `visual`, `analogy`, `formal`, `hint`, `simpler`, `harder`, `review`, `exam mode`, `recap`, `video`, and `fhp`.
 - **Persistent-state specification:** a canonical `LearnerState` schema for preferences, exam goals, mastery evidence, misconceptions, review scheduling, and session continuity.
 - **Gamification:** XP, levels, streaks, combos, badges, Boss Battles and Rematches, branching paths, Scientist / Explorer Cards, and spaced review.
@@ -60,6 +61,7 @@ Learners can request local changes at any point—for example, `hint`, `simpler`
 | [`scripts/logic_engine.py`](scripts/logic_engine.py) | Analogy seeds, Core Truth formatting, FHP mode resolution/details, deterministic Mermaid mind maps and skill trees, Scientist Card helpers | Exam-specific curriculum behavior and learner-state persistence are directed by `SKILL.md`; this module does not implement a full tutoring application |
 | [`script/logic_engine.py`](script/logic_engine.py) | Compatibility shim for older singular-path imports | Delegates to the canonical `scripts/` implementation |
 | [`scripts/quiz_module.py`](scripts/quiz_module.py) | XP, levels, streaks, badges, combo, challenge-format, review, and Socratic helpers | The host/agent orchestrates the session and stores learner state |
+| [`scripts/learning_protocol.py`](scripts/learning_protocol.py) | Intuitive Mastery sequence, eight-step numerical-problem protocol, five-level progression, error taxonomy, and remediation seeds | Deterministic contract; the host supplies learner responses and persists state |
 | [`scripts/video_explainer.py`](scripts/video_explainer.py) | Provider-neutral storyboard construction and validation; deterministic SVG scene cards and a manifest as a fallback | Lesson planning contract; rendering is handled by the hybrid adapter |
 | [`scripts/hybrid_video.py`](scripts/hybrid_video.py) | Local Cinematic MP4 renderer using precise Pillow frames and FFmpeg; hosted adapter hook; SVG fallback | Local path is intentionally deterministic and physics-first; Piper narration is optional and can be attached by a host |
 | [`scripts/video_pipeline.py`](scripts/video_pipeline.py) | Runnable rolling-bodies demo using the local-first provider order | Requires Python Pillow and FFmpeg for local MP4 output |
@@ -75,6 +77,8 @@ Read [`SKILL.md`](SKILL.md) first. For a new topic, the intended flow is:
 3. Teach one sub-unit at a time, using appropriate visualizations and examples.
 4. Assess mastery, give hints or a remedial loop when needed, then offer the learner a branching choice.
 5. Record evidence and progress; schedule review and update the concept/skill maps.
+
+Every subject uses Intuitive Mastery by default. Keep a unit small: introduce one observation, explain the concrete mechanism, formalize it, apply it, and ask for mastery evidence. For substantial numerical questions, use the eight-step problem-solving protocol and diagnose the reasoning error before remediation.
 
 For local helper use:
 

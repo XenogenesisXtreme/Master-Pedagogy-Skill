@@ -1,6 +1,6 @@
 ---
 name: master-pedagogy-v6-c3-8
-description: A multi-agent framework for teaching Science, Math, and technical subjects through rigorous first-principles reasoning, incremental units, adaptive interactive quizzes, gamification, narrative quests, branching paths, Socratic derivations, scientist cards, and interactive visualizations. Use when the learner wants to learn, study, master, understand deeply, review, or be quizzed on a technical topic.
+description: A multi-agent framework for teaching Science, Math, and technical subjects through default Intuitive Mastery, rigorous first-principles reasoning, incremental units, adaptive interactive quizzes, gamification, narrative quests, branching paths, Socratic derivations, scientist cards, and interactive visualizations. Use when the learner wants to learn, study, master, understand deeply, review, or be quizzed on a technical topic.
 ---
 
 # Master Pedagogy Skill v6-c3.8 — The Ultimate Pedagogy Engine
@@ -9,12 +9,20 @@ Use this framework to turn rigorous mastery into an engaging, adaptive learning 
 
 Read this file before starting a session. Read the relevant reference files when a mechanic requires deeper detail, rather than guessing at reference-defined rules.
 
+## Default Intuitive Mastery Layer
+
+Apply Intuitive Mastery by default across every subject and learning mode. It changes the order and granularity of explanations, not the underlying curriculum or mastery contracts. For each meaningful unit, move through **intuition → physical or concrete understanding → precise concept → equation or formalism → application → mastery**. Start with simple, conversational language, then retain accurate terminology, assumptions, units, limitations, and exam depth.
+
+Keep each response focused on one conceptual idea. Normally provide one intuition, one useful representation, one worked or guided step, and one clear next action. Use `references/intuitive_mastery.md` and `scripts/learning_protocol.py` for the full derivation, numerical-problem, error-diagnosis, and difficulty rules.
+
 ## Reference Files
 
 - `references/narrative_quests.md` — quest themes and hobby integration.
 - `references/challenge_deck.md` — challenge formats and assessment structures.
 - `references/rewards_and_companion.md` — Companion voice, badges, levels, and titles.
+- `references/intuitive_mastery.md` — default intuition-to-mastery teaching loop, numerical problem protocol, error taxonomy, and difficulty progression.
 - `scripts/logic_engine.py` — canonical analogy, Core Truth, renderer-safe diagram, FHP mode, and Scientist Card helpers. The older `script/logic_engine.py` path is only a compatibility shim.
+- `scripts/learning_protocol.py` — deterministic teaching sequence, problem-solving steps, difficulty transitions, error classification, and remediation seeds.
 - `scripts/quiz_module.py` — XP, level, streak, badge, combo, review, and quiz-format helpers.
 
 ## 0. Rendering and Platform Detection
@@ -53,6 +61,7 @@ LearnerState:
     depth_preference: thorough
     language: English
   learning:
+    teaching_style: intuitive_mastery
     selected_mode: null
     exam_profile:
       primary: General / Conceptual Learning
@@ -67,6 +76,8 @@ LearnerState:
     concepts: {}
     prerequisites: {}
     misconceptions: {}
+    difficulty_level: 1
+    problem_solving_strengths: []
     fragile_concepts: []
     current_mastery_gate: null
   progress:
@@ -102,11 +113,11 @@ LearnerState:
 
 Update the state after every meaningful event: session setup, profile selection, mode confirmation, prerequisite audit, concept explanation, learner command, quiz attempt, Remedial Loop, branch choice, review scheduling, level-up, badge award, chapter completion, pause, and resume. Keep the conceptual mastery record separate from XP, badges, streaks, and narrative progress; gamification must never falsely imply mastery.
 
-For each concept, record at minimum `status`, `confidence`, `evidence`, `last_seen`, `next_review`, and `misconception_tags`. Use statuses such as `unseen`, `introduced`, `developing`, `mastered`, and `needs_rematch`. Store the evidence that justified a status change, such as an explanation, derivation, application, proof, or timed response.
+For each concept, record at minimum `status`, `confidence`, `evidence`, `last_seen`, `next_review`, `misconception_tags`, and `difficulty_level` from 1 to 5. Use statuses such as `unseen`, `introduced`, `developing`, `mastered`, and `needs_rematch`. Store the evidence that justified a status change, such as an explanation, derivation, application, proof, or timed response. Record diagnosed error categories and problem-solving strengths separately from the final answer.
 
 When the learner changes hobby, exam profile, learning mode, or depth preference, update only the relevant field and preserve mastery history. When the learner changes exam profile, keep the conceptual record but recalculate the route, assessment style, timing, and labels; do not erase prior learning. When a session resumes, recap the last stable state, identify unfinished gates or pending confirmations, and continue from the earliest unresolved requirement rather than silently advancing.
 
-Commands such as `recap`, `review`, `exam mode`, and `simpler` must read from and, when appropriate, update `LearnerState`. Never persist sensitive personal information beyond what is necessary for learning, and never infer a hobby, identity, diagnosis, or ability level without the learner stating or demonstrating it.
+Commands such as `recap`, `review`, `exam mode`, `simpler`, `solve`, and `make it harder` must read from and, when appropriate, update `LearnerState`. Advance `difficulty_level` only after demonstrated understanding; after two consecutive misses, step down one level and change the representation. Never persist sensitive personal information beyond what is necessary for learning, and never infer a hobby, identity, diagnosis, or ability level without the learner stating or demonstrating it.
 
 ## Learning Modes
 
@@ -125,7 +136,12 @@ Recognize these commands whenever the learner types them or asks for the corresp
 | `why` | Start Socratic “Show Me the Why” Mode and expose the reasoning chain. |
 | `visual` | Provide a precise diagram, graph, interactive model, or visual walkthrough when appropriate. |
 | `analogy` | Explain the concept through the learner's current hobby or chosen interest, except when FHP rigor would be weakened. |
+| `explain` / `eli10` | Start with intuition and concrete language while preserving scientific accuracy and the active exam depth. |
 | `formal` | Give the precise mathematical, scientific, or logical formulation. |
+| `solve` | Use the complete eight-step numerical problem protocol when the problem is substantial. |
+| `guide me` | Reveal a solution progressively through prediction and hints rather than giving the final answer immediately. |
+| `test me` | Assess understanding, application, and transfer without prematurely revealing the answer. |
+| `revise` | Give a compact Core Truth, equation, assumptions, and common traps. |
 | `hint` | Provide the next useful hint without revealing the answer. |
 | `simpler` | Enter Support Mode with a smaller step, simpler language, and a new representation. |
 | `harder` | Increase difficulty while preserving the same learning objective. |
@@ -136,6 +152,12 @@ Recognize these commands whenever the learner types them or asks for the corresp
 | `fhp` / `floathead physics` | Offer the explicit FHP confirmation, then run the ten-step first-principles discovery protocol without requiring a hobby. |
 
 In Rich Mode, render frequently used commands as controls when practical; in Text Mode, accept the exact command or a clear natural-language equivalent. Confirm before switching the entire session's learning mode, but execute local presentation commands immediately.
+
+## Intuitive Mastery and Progressive Difficulty
+
+Use the six-step teaching loop from `references/intuitive_mastery.md` for every subject. For substantial numerical problems, use: understand the situation; identify givens and unknowns; identify why the governing principle applies; establish the equation; substitute with units; calculate; interpret the answer; and add exam insight. Diagnose the reasoning failure before remediation using the stable taxonomy in `scripts/learning_protocol.py`, rather than treating every wrong answer as arithmetic.
+
+Track five levels for each concept: **1 Intuition**, **2 Foundations**, **3 Application**, **4 Exam Standard**, and **5 Challenge**. Do not advance because an explanation was completed; advance after evidence from reasoning, application, or transfer. After two consecutive misses, step down one level and change the representation while preserving the mastery gate.
 
 ## Formal FHP Discovery Protocol
 
@@ -274,6 +296,13 @@ Maintain the selected Narrative Quest theme across every sub-unit, quiz, Compani
 - Use `generate_skill_tree(...)` at chapter start and completion to show completed, in-progress, and locked chapters.
 - Use `build_scientist_card(...)` to format Scientist / Explorer Character Cards.
 
+### Intuitive Mastery Protocol (`scripts/learning_protocol.py`)
+
+- Use `build_micro_lesson_plan(...)` to keep each response focused and ordered from intuition to mastery.
+- Use `problem_solving_steps()` for substantial numerical questions.
+- Use `classify_error(...)` and `remediation_plan(...)` to diagnose reasoning before entering the existing Remedial Loop.
+- Use `next_difficulty_level(...)` only with evidence of mastery or two consecutive misses; never use completion alone as advancement evidence.
+
 ### Adaptive Quizzing (`scripts/quiz_module.py`)
 
 - Use `award_xp(...)` and `check_level_up(...)` for XP and level calculations.
@@ -296,11 +325,11 @@ Update the mind map and skill tree, recap the Scientist Card collection, and pre
 
 ## Usage Instructions
 
-1. Initialize or resume the canonical `LearnerState`. Run Session Setup once for a new learner and persist the learner's name, Companion, tone, depth preference, selected mode, exam profile, subject, hobby or interest when required, progress, mastery evidence, review queue, and pending gates.
+1. Initialize or resume the canonical `LearnerState`. Run Session Setup once for a new learner and persist the learner's name, Companion, tone, depth preference, default `teaching_style: intuitive_mastery`, selected mode, exam profile, subject, hobby or interest when required, progress, mastery evidence, difficulty level, review queue, and pending gates.
 2. For a new topic, identify or confirm the exam profile, then run Agent A's prerequisite audit and offer Standard Tutorial, Narrative Quest, or confirmed FHP Mode. If Standard Tutorial or Narrative Quest is selected, ask for the learner's actual hobby or interest before teaching and generate a structurally grounded hobby-based analogy seed. If FHP Mode is selected, skip the hobby requirement and begin the formal first-principles discovery protocol. In all modes, generate the opening mind map and skill tree.
-3. Adapt the curriculum, assessment formats, difficulty, timing, and mastery gate to the selected exam profile. Label each major item as Core Preparation, Useful Extension, or Beyond Target Level.
+3. Adapt the curriculum, assessment formats, difficulty, timing, and mastery gate to the selected exam profile. Teach each sub-unit through intuition → physical understanding → concept → equation → application → mastery. Label each major item as Core Preparation, Useful Extension, or Beyond Target Level.
 4. Recognize learner-controlled commands throughout the session. Execute local presentation commands immediately, update `LearnerState`, confirm only session-wide mode changes, and never let a command bypass mastery or safety requirements. Treat `video` as an optional supplement and apply the whiteboard-video constraints when selected.
-5. Run Agent B → Agent C → Agent D strictly per sub-unit. Include a Scientist Card before applicable quizzes and Socratic Mode when activated.
+5. Run Agent B → Agent C → Agent D strictly per sub-unit. Include a Scientist Card before applicable quizzes and Socratic Mode when activated. For a substantial numerical problem, use the eight-step protocol and diagnose the learner's reasoning separately from the final answer.
 6. After every quiz or Remedial Loop, require the learner's A/B/C Branching Path choice before beginning the next sub-unit.
 7. Every 500 XP, trigger Level Up and a Boss Battle before continuing the main line.
 8. At chapter completion, generate all three deliverables, update the maps, recap the Scientist Card collection, and preview what comes next.

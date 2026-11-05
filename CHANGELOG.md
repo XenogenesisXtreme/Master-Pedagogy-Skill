@@ -4,12 +4,17 @@
 
 This release names the merged exam-profile edition v6-c3.8 and aligns the skill metadata and repository documentation with that release. It retains the teaching features and helpers described below; the version-label update does not itself change runtime behavior.
 
+The current v6-c3.8 line now also enables the Intuitive Mastery execution layer by default without replacing the existing FHP, exam-profile, mastery-gate, or video systems.
+
 ### Release notes
 
 - Standardized the active skill identity and documentation on **v6-c3.8**.
 - Retained exam profiles, the `LearnerState` specification, learner commands, and the ten-step FHP discovery protocol.
 - Retained reliable diagram helpers, the legacy import shim, video storyboard validation, and the SVG scene-card fallback.
 - Clarified that persistent learner storage and actual video generation require host-provided infrastructure or a provider backend.
+- Added the default intuition → physical understanding → concept → equation → application → mastery loop for all subjects.
+- Added a tested numerical-problem protocol, five-level evidence-based progression, stable error taxonomy, and targeted remediation seeds.
+- Extended `LearnerState` guidance with teaching style, difficulty level, problem-solving strengths, and diagnosed misconception categories.
 
 ## v5 / c2.3 — Conditional Hobby-Based Analogy Rules (Historical; included in v6-c3.8)
 
