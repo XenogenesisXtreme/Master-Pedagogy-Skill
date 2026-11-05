@@ -1,0 +1,31 @@
+{
+  "target": "OpenMontage Remotion composer and supporting video pipeline",
+  "url": "https://github.com/calesthio/OpenMontage",
+  "path": "/home/ubuntu/openmontage-analysis",
+  "revision": "195eab24478dc9363326aec437aefc3701635ddf",
+  "license": "AGPL-3.0",
+  "analysis_scope": [
+    "Remotion cinematic renderer",
+    "scene/prop model",
+    "captions/subtitles",
+    "transitions/composition",
+    "audio/TTS boundary",
+    "provider/asset routing",
+    "manifests/media QA",
+    "runtime/delivery"
+  ],
+  "evidence": {
+    "rea_evidence_id": "ev_8fb813202915dbc83805b6682ac4232dfba9a94c4e7c26aea394330b7c78b766",
+    "rea_artifact_sha256": "56a2b742d1f13da7ce78dced6f91c22de2795f62cb9bd22a22dd0bbf1d9b0cc7",
+    "rea_relevant_files": 42,
+    "rea_parsed_javascript_files": 35,
+    "rea_ast_nodes": 32739,
+    "rea_findings": 457
+  },
+  "mps": {
+    "path": "/home/ubuntu/MPS-git",
+    "branch": "mvpe",
+    "base_revision": "bf6e451b970ab0c8e8745acb7bcf1d155c86c76a"
+  },
+  "clean_room": true
+}

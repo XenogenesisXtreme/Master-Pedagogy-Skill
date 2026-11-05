@@ -18,6 +18,8 @@ from pathlib import Path
 from typing import Any
 
 from scripts.hybrid_video import render_hybrid, render_result_manifest
+from scripts.mpve_captions import CaptionWord, write_sidecars
+from scripts.mpve_qa import inspect_media, write_final_review
 from scripts.video_explainer import build_storyboard
 
 JOB_STATES = {"queued", "processing", "completed", "failed"}
@@ -41,6 +43,8 @@ class VideoRequest:
     learner_interest: str | None = None
     analogy_consent: bool = False
     derived: bool = False
+    caption_words: tuple[dict[str, Any], ...] = ()
+    caption_direction: str = "auto"
     idempotency_key: str | None = None
 
     @classmethod
@@ -65,6 +69,8 @@ class VideoRequest:
             learner_interest=payload.get("learner_interest"),
             analogy_consent=bool(payload.get("analogy_consent", False)),
             derived=bool(payload.get("derived", False)),
+            caption_words=tuple(dict(word) for word in payload.get("caption_words", ()) if isinstance(word, dict)),
+            caption_direction=str(payload.get("caption_direction", "auto")),
             idempotency_key=payload.get("idempotency_key"),
         )
 
@@ -82,11 +88,18 @@ class VideoRequest:
             errors.append("learner_interest is required when analogy_consent is true")
         if self.mode.lower() in {"fhp", "floathead", "floathead physics"} and not self.derived:
             errors.append("FHP requests require derived=true after the written derivation is complete")
+        if self.caption_direction not in {"auto", "ltr", "rtl"}:
+            errors.append("caption_direction must be auto, ltr, or rtl")
+        if self.caption_words:
+            words = [CaptionWord(str(item.get("text", "")), int(item.get("start_ms", -1)), int(item.get("end_ms", -1)), bool(item.get("page_break_after", False))) for item in self.caption_words]
+            from scripts.mpve_captions import validate_words
+            errors.extend(validate_words(words))
         return errors
 
     def canonical(self) -> dict[str, Any]:
         data = asdict(self)
         data["prerequisites"] = list(self.prerequisites)
+        data["caption_words"] = list(self.caption_words)
         data.pop("idempotency_key", None)
         return data
 
@@ -203,7 +216,12 @@ class MPVEEngine:
             output_path = job_dir / "video.mp4"
             result = render_hybrid(storyboard, output_path, fallback_dir=job_dir / "fallback")
             manifest_path = render_result_manifest(result, job_dir / "render.manifest.json")
-            if result.output_path and result.output_path.exists():
+            captions = None
+            if request.caption_words:
+                captions = write_sidecars([CaptionWord(str(item["text"]), int(item["start_ms"]), int(item["end_ms"]), bool(item.get("page_break_after", False))) for item in request.caption_words], job_dir / "captions", direction=request.caption_direction)
+            qa = inspect_media(result.output_path, expected_duration=result.duration_seconds, sample_dir=job_dir / "qa-frames") if result.output_path and result.output_path.exists() else {"status": "fail", "errors": ["renderer did not produce an MP4"], "representative_frames": [], "audio_streams": []}
+            review_path = write_final_review(qa, job_dir / "final-review.json", result.provider, result.duration_seconds, result.aspect_ratio)
+            if result.output_path and result.output_path.exists() and qa["status"] == "pass":
                 artifact = str(result.output_path)
                 state = "completed"
                 progress = 100
@@ -222,8 +240,12 @@ class MPVEEngine:
                 "errors": result.errors,
                 "quality_gates": result.quality_gates,
                 "storyboard": str(job_dir / "storyboard.json"),
+                "qa": qa,
+                "final_review": str(review_path),
+                "captions": captions,
             }
-            self.store.update(job_id, state=state, stage="completed" if state == "completed" else "failed", progress=progress, result=result_payload, error=None if state == "completed" else "renderer did not produce an MP4")
+            error = None if state == "completed" else "; ".join(qa.get("errors", [])) or "post-render QA failed"
+            self.store.update(job_id, state=state, stage="completed" if state == "completed" else "failed", progress=progress, result=result_payload, error=error)
         except Exception as exc:
             self.store.update(job_id, state="failed", stage="failed", progress=100, error=str(exc))
 

@@ -49,7 +49,8 @@ class MPVETests(unittest.TestCase):
     def test_successful_job_has_result_and_storyboard(self):
         with tempfile.TemporaryDirectory() as directory:
             engine = MPVEEngine(directory)
-            with patch("scripts.mpve_engine.render_hybrid", side_effect=self.fake_result):
+            qa = {"status": "pass", "errors": [], "warnings": [], "representative_frames": [], "audio_streams": [], "duration_seconds": 15}
+            with patch("scripts.mpve_engine.render_hybrid", side_effect=self.fake_result), patch("scripts.mpve_engine.inspect_media", return_value=qa):
                 job, _ = engine.submit(self.payload())
                 deadline = time.time() + 3
                 while time.time() < deadline:
@@ -61,6 +62,32 @@ class MPVETests(unittest.TestCase):
                 self.assertEqual(current["state"], "completed")
                 self.assertTrue(Path(current["result"]["storyboard"]).exists())
                 self.assertTrue(current["result"]["artifact"].endswith("video.mp4"))
+
+    def test_invalid_media_is_not_marked_completed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            engine = MPVEEngine(directory)
+            qa = {"status": "fail", "errors": ["ffprobe could not decode the output"], "warnings": [], "representative_frames": [], "audio_streams": [], "duration_seconds": 0}
+            with patch("scripts.mpve_engine.render_hybrid", side_effect=self.fake_result), patch("scripts.mpve_engine.inspect_media", return_value=qa):
+                job, _ = engine.submit(self.payload())
+                deadline = time.time() + 3
+                while time.time() < deadline and engine.status(job["job_id"])["state"] == "processing":
+                    time.sleep(0.01)
+                current = engine.status(job["job_id"])
+                self.assertEqual(current["state"], "failed")
+                self.assertIn("ffprobe", current["error"])
+
+    def test_caption_words_create_sidecars(self):
+        with tempfile.TemporaryDirectory() as directory:
+            engine = MPVEEngine(directory)
+            payload = self.payload() | {"caption_words": [{"text": "Floatation", "start_ms": 0, "end_ms": 800}, {"text": "explained", "start_ms": 800, "end_ms": 1500}]}
+            with patch("scripts.mpve_engine.render_hybrid", side_effect=self.fake_result), patch("scripts.mpve_engine.inspect_media", return_value={"status": "pass", "errors": [], "warnings": [], "representative_frames": [], "audio_streams": [], "duration_seconds": 15}):
+                job, _ = engine.submit(payload)
+                deadline = time.time() + 3
+                while time.time() < deadline and engine.status(job["job_id"])["state"] == "processing":
+                    time.sleep(0.01)
+                current = engine.status(job["job_id"])
+                self.assertEqual(current["state"], "completed")
+                self.assertTrue(Path(current["result"]["captions"]["vtt"]).exists())
 
     def test_renderer_failure_is_reported(self):
         with tempfile.TemporaryDirectory() as directory:

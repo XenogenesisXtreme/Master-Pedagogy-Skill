@@ -1,0 +1,179 @@
+{
+  "target": "/home/ubuntu/MPS-git",
+  "sha256": "0cf41c4e612dbc770486849231aebc79db9e2cc20463c94f2e20d32f6bba9d06",
+  "git_revision": "bf6e451b970ab0c8e8745acb7bcf1d155c86c76a",
+  "git_remote": "https://github.com/XenogenesisXtreme/Master-Pedagogy-Skill.git",
+  "file_count": 34,
+  "files": [
+    {
+      "path": "CHANGELOG.md",
+      "bytes": 9082,
+      "suffix": ".md"
+    },
+    {
+      "path": "README.md",
+      "bytes": 11663,
+      "suffix": ".md"
+    },
+    {
+      "path": "SKILL.md",
+      "bytes": 33493,
+      "suffix": ".md"
+    },
+    {
+      "path": "docs/mpve-api.md",
+      "bytes": 2243,
+      "suffix": ".md"
+    },
+    {
+      "path": "docs/mpve-integration.md",
+      "bytes": 2186,
+      "suffix": ".md"
+    },
+    {
+      "path": "docs/mpve-report.md",
+      "bytes": 5091,
+      "suffix": ".md"
+    },
+    {
+      "path": "docs/reverse-engineering/openmontage-inventory.json",
+      "bytes": 259110,
+      "suffix": ".json"
+    },
+    {
+      "path": "references/challenge_deck.md",
+      "bytes": 8397,
+      "suffix": ".md"
+    },
+    {
+      "path": "references/narrative_quests.md",
+      "bytes": 10339,
+      "suffix": ".md"
+    },
+    {
+      "path": "references/rewards_and_companion.md",
+      "bytes": 8490,
+      "suffix": ".md"
+    },
+    {
+      "path": "references/scientist_cards.md",
+      "bytes": 17648,
+      "suffix": ".md"
+    },
+    {
+      "path": "script/example.py",
+      "bytes": 589,
+      "suffix": ".py"
+    },
+    {
+      "path": "script/logic_engine.py",
+      "bytes": 2726,
+      "suffix": ".py"
+    },
+    {
+      "path": "script/quiz_module.py",
+      "bytes": 2704,
+      "suffix": ".py"
+    },
+    {
+      "path": "scripts/hybrid_video.py",
+      "bytes": 11706,
+      "suffix": ".py"
+    },
+    {
+      "path": "scripts/logic_engine.py",
+      "bytes": 9269,
+      "suffix": ".py"
+    },
+    {
+      "path": "scripts/mpve_captions.py",
+      "bytes": 3150,
+      "suffix": ".py"
+    },
+    {
+      "path": "scripts/mpve_engine.py",
+      "bytes": 11833,
+      "suffix": ".py"
+    },
+    {
+      "path": "scripts/mpve_qa.py",
+      "bytes": 5222,
+      "suffix": ".py"
+    },
+    {
+      "path": "scripts/mpve_server.py",
+      "bytes": 3198,
+      "suffix": ".py"
+    },
+    {
+      "path": "scripts/mpve_timeline.py",
+      "bytes": 3564,
+      "suffix": ".py"
+    },
+    {
+      "path": "scripts/production_manifest.py",
+      "bytes": 2739,
+      "suffix": ".py"
+    },
+    {
+      "path": "scripts/quiz_module.py",
+      "bytes": 17364,
+      "suffix": ".py"
+    },
+    {
+      "path": "scripts/video_explainer.py",
+      "bytes": 13252,
+      "suffix": ".py"
+    },
+    {
+      "path": "scripts/video_pipeline.py",
+      "bytes": 2677,
+      "suffix": ".py"
+    },
+    {
+      "path": "skills/mpve/SKILL.md",
+      "bytes": 3322,
+      "suffix": ".md"
+    },
+    {
+      "path": "templates/cheat_sheet_template.md",
+      "bytes": 376,
+      "suffix": ".md"
+    },
+    {
+      "path": "templates/problem_set_template.md",
+      "bytes": 328,
+      "suffix": ".md"
+    },
+    {
+      "path": "tests/test_hybrid_video.py",
+      "bytes": 3135,
+      "suffix": ".py"
+    },
+    {
+      "path": "tests/test_logic_engine.py",
+      "bytes": 1885,
+      "suffix": ".py"
+    },
+    {
+      "path": "tests/test_mpve.py",
+      "bytes": 5813,
+      "suffix": ".py"
+    },
+    {
+      "path": "tests/test_mpve_contracts.py",
+      "bytes": 2019,
+      "suffix": ".py"
+    },
+    {
+      "path": "tests/test_production_manifest.py",
+      "bytes": 1647,
+      "suffix": ".py"
+    },
+    {
+      "path": "tests/test_video_explainer.py",
+      "bytes": 3942,
+      "suffix": ".py"
+    }
+  ]
+}
