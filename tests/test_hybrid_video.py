@@ -50,7 +50,7 @@ class HybridVideoTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "result.mp4"
             result = render_hybrid(storyboard, output, hosted_renderer=lambda _storyboard, path: calls.append(path) or path)
-            self.assertEqual(result.provider, "local-cinematic")
+            self.assertEqual(result.provider, "remotion-cinematic")
             self.assertEqual(calls, [])
 
     def test_manifest_is_written_for_result(self):
@@ -59,7 +59,7 @@ class HybridVideoTests(unittest.TestCase):
             result = render_hybrid(storyboard, Path(directory) / "result.mp4")
             manifest = render_result_manifest(result, Path(directory) / "manifest.json")
             payload = json.loads(manifest.read_text(encoding="utf-8"))
-            self.assertEqual(payload["provider"], "local-cinematic")
+            self.assertEqual(payload["provider"], "remotion-cinematic")
             self.assertEqual(payload["aspect_ratio"], "16:9")
 
 

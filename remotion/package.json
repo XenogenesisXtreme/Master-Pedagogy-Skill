@@ -1,0 +1,17 @@
+{
+  "name": "mps-mpve-remotion-renderer",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Original Remotion renderer for the Master Pedagogy Video Engine",
+  "scripts": {
+    "render": "remotion render src/main.jsx MPVE out/video.mp4 --props=props.json",
+    "bundle": "remotion bundle src/main.jsx"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.244",
+    "@remotion/player": "4.0.244",
+    "remotion": "4.0.244",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  }
+}

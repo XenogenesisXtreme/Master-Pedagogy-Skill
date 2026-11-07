@@ -214,12 +214,13 @@ class MPVEEngine:
             (job_dir / "storyboard.json").write_text(storyboard.to_json() + "\n", encoding="utf-8")
             self.store.update(job_id, stage="rendering", progress=30)
             output_path = job_dir / "video.mp4"
-            result = render_hybrid(storyboard, output_path, fallback_dir=job_dir / "fallback")
+            result = render_hybrid(storyboard, output_path, fallback_dir=job_dir / "fallback", caption_words=list(request.caption_words))
             manifest_path = render_result_manifest(result, job_dir / "render.manifest.json")
             captions = None
             if request.caption_words:
                 captions = write_sidecars([CaptionWord(str(item["text"]), int(item["start_ms"]), int(item["end_ms"]), bool(item.get("page_break_after", False))) for item in request.caption_words], job_dir / "captions", direction=request.caption_direction)
-            qa = inspect_media(result.output_path, expected_duration=result.duration_seconds, sample_dir=job_dir / "qa-frames") if result.output_path and result.output_path.exists() else {"status": "fail", "errors": ["renderer did not produce an MP4"], "representative_frames": [], "audio_streams": []}
+            expected_width, expected_height, expected_fps = (1920, 1080, 30) if result.provider == "remotion-cinematic" else (1280, 720, 24)
+            qa = inspect_media(result.output_path, expected_duration=result.duration_seconds, expected_width=expected_width, expected_height=expected_height, expected_fps=expected_fps, sample_dir=job_dir / "qa-frames") if result.output_path and result.output_path.exists() else {"status": "fail", "errors": ["renderer did not produce an MP4"], "representative_frames": [], "audio_streams": []}
             review_path = write_final_review(qa, job_dir / "final-review.json", result.provider, result.duration_seconds, result.aspect_ratio)
             if result.output_path and result.output_path.exists() and qa["status"] == "pass":
                 artifact = str(result.output_path)

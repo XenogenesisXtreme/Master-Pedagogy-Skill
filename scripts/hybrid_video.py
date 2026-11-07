@@ -26,6 +26,7 @@ from typing import Callable
 from PIL import Image, ImageDraw, ImageFont
 
 from scripts.production_manifest import make_manifest, select_provider
+from scripts.remotion_video import render_remotion
 from scripts.video_explainer import Storyboard, render_static_fallback, validate_storyboard
 
 WIDTH, HEIGHT = 1280, 720
@@ -219,11 +220,18 @@ def render_hybrid(
     *,
     hosted_renderer: Callable[[Storyboard, Path], Path] | None = None,
     fallback_dir: str | Path | None = None,
+    caption_words: list[dict] | None = None,
 ) -> RenderResult:
-    """Try local rendering, then an optional hosted adapter, then SVG fallback."""
+    """Try MPS Remotion, then local rendering, hosted adapter, and SVG fallback."""
     errors: list[str] = []
     manifest = make_manifest(storyboard, hosted_available=hosted_renderer is not None)
     output = Path(output_path)
+    try:
+        remotion_output = render_remotion(storyboard, output, caption_words=caption_words)
+        select_provider(manifest, "remotion-cinematic")
+        return RenderResult("remotion-cinematic", remotion_output, sum(scene.duration for scene in storyboard.scenes), storyboard.aspect_ratio, False, [], errors, ["storyboard validation", "Remotion composition", "H.264 encode"])
+    except Exception as exc:
+        errors.append(f"remotion-cinematic: {exc}")
     try:
         result = render_local_cinematic(storyboard, output)
         select_provider(manifest, result.provider)
