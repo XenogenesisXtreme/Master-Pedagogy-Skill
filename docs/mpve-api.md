@@ -40,11 +40,11 @@ The state is one of `queued`, `processing`, `completed`, or `failed`. Stage and 
 curl http://127.0.0.1:8787/videos/mps-abc123/result
 ```
 
-The result includes the MP4 path when the local renderer succeeds, the storyboard path, render manifest path, selected provider, duration, aspect ratio, audio flag, fallback assets, errors, and quality gates. A result request before completion returns `409`.
+The result includes the MP4 path when the Remotion or deterministic local renderer succeeds, the storyboard path, render manifest path, selected provider, duration, aspect ratio, audio flag, fallback assets, errors, and quality gates. A result request before completion returns `409`.
 
 When `caption_words` is supplied, each word must contain `text`, `start_ms`, and `end_ms`. MPVE writes SRT, WebVTT, and JSON timing sidecars under the job directory and returns their paths in `result.captions`. `caption_direction` accepts `auto`, `ltr`, or `rtl`.
 
-Before a job becomes `completed`, MPVE runs real post-render QA: ffprobe decoding, video stream and dimension checks, duration validation, and four representative frame extractions. The result contains `result.qa` and a `result.final_review` path. Invalid bytes or failed media checks produce a failed job even when a file exists.
+Before a job becomes `completed`, MPVE runs real post-render QA: ffprobe decoding, video stream, provider-specific dimension and frame-rate checks, duration validation, and four representative frame extractions. The result contains `result.qa` and a `result.final_review` path. Invalid bytes or failed media checks produce a failed job even when a file exists.
 
 ## Integration contract
 

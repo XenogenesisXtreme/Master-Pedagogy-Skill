@@ -1,44 +1,87 @@
 ---
 name: mpve
-description: Master Pedagogy Video Engine workflow for planning, rendering, validating, and delivering instructional videos inside the existing MPS plugin. Use when MPS has already decided that a video intervention is appropriate or when implementing/testing the MPVE API.
+description: Master Pedagogy Video Engine for adding validated instructional video interventions to the existing Master Pedagogy Skill plugin. Use when MPS has already decided that a video is appropriate, when planning or rendering a physics explainer, or when integrating/testing the MPVE API.
 ---
 
 # Master Pedagogy Video Engine
 
-MPVE is a video-generation capability inside Master Pedagogy, not a separate user-facing plugin. Preserve the existing MPS conversation, learner state, misconception diagnosis, trigger decisions, follow-up questions, and mastery gates.
+Use MPVE as a video capability **inside the existing Master Pedagogy Skill (MPS)**. Do not create a separate tutoring product, replace MPS, or let MPVE make pedagogical decisions that belong to MPS.
 
 ## Responsibility boundary
 
-MPS decides whether a video is appropriate, supplies structured learning context, and resumes teaching and mastery checking after the video. MPVE owns video planning, script/storyboard construction, visuals, equations/diagrams, narration/captions when configured, rendering, QA, job lifecycle, and artifact delivery. MPVE must not invent a pedagogical trigger or replace a mastery check.
+MPS owns the learner conversation and state, prerequisite and misconception diagnosis, the three-consecutive-incorrect-answer trigger, learning-mode and exam-profile decisions, follow-up teaching, and mastery gates.
+
+MPVE owns only the video intervention after MPS supplies a valid request: planning, script/storyboard creation, diagrams and animation, textbook-style equations, narration text and captions when configured, rendering, media QA, job lifecycle, and artifact delivery. After delivery, MPS must resume the written lesson and mastery check. A video never proves mastery.
+
+## When to invoke
+
+Invoke MPVE only when MPS has decided that motion, sequencing, or a visual intervention will materially improve understanding. Pass the diagnosed knowledge gap and the pending mastery objective. Do not independently trigger a video merely because a learner has made a mistake.
+
+For a learner-facing `video` command, use Cinematic by default. Allow explicit `video whiteboard`, `video short`, or `video fhp` overrides. Infer a presentation profile from the topic when no profile is supplied for an isolated video request; do not overwrite the learner's persistent curriculum profile with that inference.
 
 ## Request contract
 
-Submit JSON containing at least `topic` and `objective`. Useful fields include `subtopic`, `learner_level`, `prerequisites`, `misconception`, `mastery_check`, `exam_profile`, `mode`, `style`, `duration`, `aspect_ratio`, `narration`, `learner_interest`, `analogy_consent`, and `derived`.
+Send structured JSON with at least `topic` and `objective`. Include these fields when known:
 
-Cinematic is the default style. The current local renderer requires 16:9 and a 15–45 second duration. FHP requests require `derived: true` because the video reinforces a completed written derivation and must not replace first-principles discovery. Use learner interests only when MPS has obtained consent.
+- `subtopic`, `learner_level`, `prerequisites`, and `misconception`
+- `mastery_check`, `narration`, `equations`, and `visual_assets`
+- `mode`, `style`, `duration`, and `aspect_ratio`
+- `exam_profile`, `source_refs`, and `narration_language`
+- `learner_interest` and `analogy_consent`
+- `derived` for FHP requests
 
-## API
+Defaults and gates:
 
-Run `python scripts/mpve_server.py --port 8787`.
+- `style`: `cinematic`
+- `aspect_ratio`: `16:9`
+- `duration`: 15 seconds; valid range 15–45 seconds
+- Use learner interests only after MPS has asked permission. Set `analogy_consent: true` only with that permission and a learner-provided interest.
+- FHP/Floathead Physics requires a completed written derivation and `derived: true`; never use MPVE to replace the first-principles discovery protocol.
+- Preserve the supplied misconception and objective in the storyboard. Do not invent unsupported physics claims.
 
-- `POST /videos` creates a job and returns a job ID. Identical canonical requests are deduplicated.
-- `GET /videos/{job_id}` returns `queued`, `processing`, `completed`, or `failed` state, stage, progress, and errors.
-- `GET /videos/{job_id}/result` returns the final artifact and metadata after completion; it returns a conflict while the job is not complete.
+## Required production workflow
 
-The current provider order is local deterministic Cinematic MP4 rendering, then the existing optional hosted adapter hook, then checked SVG fallback. A fallback is reported explicitly and must never be described as a genuine MP4.
+1. Receive a valid request from MPS; do not reinterpret the trigger or mastery decision.
+2. Validate required fields, profile/style, 16:9 aspect ratio, 15–45 second duration, analogy consent, and FHP derivation state.
+3. Create and persist the provider-neutral storyboard before rendering.
+4. Render through the provider boundary. The current local order is Remotion Cinematic → deterministic local Cinematic fallback → optional hosted adapter → checked SVG scene-card fallback.
+5. Preserve complete equation derivations. Render equations as textbook math: Greek glyphs, semantic subscripts/superscripts, fractions, and aligned lines—not raw LaTeX or underscore syntax.
+6. Generate caption sidecars when caption timings are provided. Captions should remain simplified and readable.
+7. Run post-render QA: decode with ffprobe, verify a real video stream, dimensions, duration, representative frames, and artifact integrity. For Remotion, expect 1920×1080 at 30 fps; for the deterministic fallback, expect 1280×720 at 24 fps.
+8. Return the artifact and metadata only when the job is completed and the artifact exists. Identify fallback assets and limitations explicitly.
+9. MPS resumes the written explanation and performs the pending mastery check.
 
-## Operational workflow
+## API lifecycle
 
-1. Receive a valid request from MPS.
-2. Validate required fields, duration, aspect ratio, FHP derivation state, and analogy consent.
-3. Create a storyboard before rendering and persist it with the job.
-4. Render through the provider boundary.
-5. Write a render manifest with provider, artifact, duration, audio, fallback assets, errors, and quality gates.
-6. Return the artifact and metadata to MPS.
-7. MPS resumes its written explanation and mastery check; MPVE does not mark mastery.
+Start the local adapter with:
 
-Use `scripts/mpve_engine.py` for library integration and `scripts/mpve_server.py` for the local HTTP adapter. Keep provider-specific additions behind the renderer boundary and retain structured errors, idempotency, and artifact paths.
+```bash
+python scripts/mpve_server.py --host 127.0.0.1 --port 8787
+```
 
-## Verification
+Use:
 
-Run the MPVE tests and an end-to-end sample. Check that the output is a real playable MP4 with H.264 video, 1280×720 dimensions, the requested duration range, and a manifest. Also test invalid requests, duplicate submission, status polling, result-before-completion behavior, and renderer failure reporting.
+- `POST /videos` — submit a request and receive a job ID
+- `GET /videos/{job_id}` — retrieve state, stage, progress, and errors
+- `GET /videos/{job_id}/result` — retrieve the completed artifact and metadata
+
+States are `queued`, `processing`, `completed`, and `failed`. Identical canonical requests are deduplicated. A result requested before completion is not success. A storyboard, placeholder, simulated render, or static SVG must never be described as a generated MP4.
+
+See `references/chatgpt-integration.md` for the adapter contract and polling pseudocode. See `references/operations.md` for setup, provider behavior, QA, limitations, and verification commands.
+
+## Clean-room and transparency rules
+
+REA and OpenMontage findings may inform capability-level architecture and observable workflow patterns, but MPVE must use independently written code, assets, and interfaces. Do not copy OpenMontage source, protected assets, secrets, or implementation details. Credit OpenMontage/Calesthio as architectural inspiration when describing the project.
+
+Be explicit about current limits: the local Remotion renderer produces a genuine MP4 and may contain silent audio when narration/TTS is not configured; narration text and caption timing are supported, but do not claim synthesized narration unless the selected provider actually produced it. Keep hosted providers behind the provider boundary.
+
+## Repository integration points
+
+- `scripts/mpve_engine.py` — job lifecycle and library API
+- `scripts/mpve_server.py` — HTTP adapter
+- `scripts/video_explainer.py` — storyboard contract and validation
+- `scripts/hybrid_video.py` — provider dispatch
+- `scripts/remotion_video.py` and `remotion/` — Remotion renderer
+- `scripts/mpve_qa.py` — media QA
+- `docs/mpve-api.md` — HTTP examples
+- `docs/mpve-integration.md` — MPS/ChatGPT handoff
