@@ -42,6 +42,7 @@ def storyboard_props(storyboard: Storyboard, caption_words: list[dict[str, Any]]
             "title": scene.visual_goal,
             "explanation": scene.narration,
             "equation": scene.equations[0] if scene.equations else "",
+            "equations": scene.equations,
             "visual": _scene_visual(storyboard, scene.assets),
         })
         cursor += scene.duration

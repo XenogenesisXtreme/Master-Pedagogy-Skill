@@ -26,8 +26,33 @@ function FadeIn({children, start=0, duration=18, style={}}) {
   return <div style={{opacity, transform:`translateY(${y}px)`, ...style}}>{children}</div>;
 }
 
-function Equation({text}) {
-  return <div style={{fontFamily:'Georgia', color:palette.yellow, fontSize:42, fontWeight:700, padding:'14px 20px', borderLeft:`4px solid ${palette.yellow}`, background:'rgba(255,209,102,.08)'}}>{text}</div>;
+const greek = {alpha:'α', beta:'β', gamma:'γ', delta:'δ', epsilon:'ε', theta:'θ', lambda:'λ', mu:'μ', rho:'ρ', sigma:'σ', tau:'τ', phi:'φ', omega:'ω', Delta:'Δ', Lambda:'Λ', Sigma:'Σ', Omega:'Ω'};
+
+function escapeMath(value) {
+  return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function mathHtml(value) {
+  let text = String(value || '').trim();
+  text = text.replace(/\\([A-Za-z]+)/g, (_, name) => greek[name] || name);
+  text = text.replace(/\\cdot/g, ' · ').replace(/\\times/g, ' × ').replace(/\\left|\\right/g, '');
+  text = escapeMath(text).replace(/\^\{([^}]+)\}/g, '<sup>$1</sup>').replace(/\^([A-Za-z0-9]+)/g, '<sup>$1</sup>');
+  text = text.replace(/_\{([^}]+)\}/g, '<sub>$1</sub>').replace(/_([A-Za-z0-9]+)/g, '<sub>$1</sub>');
+  text = text.replace(/\b(F|V|v|a|m|I|R|T|p|E|K|ρ|σ)(fluid|displaced|net|max|min|initial|final)\b/g, '$1<sub>$2</sub>');
+  text = text.replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, '<span class="math-frac"><span>$1</span><span>$2</span></span>');
+  return text;
+}
+
+function MathLine({text}) {
+  return <span className="math-line" dangerouslySetInnerHTML={{__html:mathHtml(text)}} />;
+}
+
+function Equation({lines=[], text=''}) {
+  const rendered = (lines.length ? lines : [text]).filter(Boolean);
+  return <div style={{fontFamily:'Georgia, Times New Roman, serif', color:palette.yellow, fontSize:40, fontWeight:700, padding:'14px 20px', borderLeft:`4px solid ${palette.yellow}`, background:'rgba(255,209,102,.08)', lineHeight:1.45, letterSpacing:.3}}>
+    <style>{`.math-line{display:block;white-space:nowrap}.math-line sub{font-size:.62em;vertical-align:-.32em}.math-line sup{font-size:.62em;vertical-align:.55em}.math-frac{display:inline-flex;vertical-align:middle;flex-direction:column;text-align:center;font-size:.78em;line-height:1.02;margin:0 .16em}.math-frac span:first-child{border-bottom:2px solid currentColor;padding:0 .18em}.math-frac span:last-child{padding:.08em .18em 0}`}</style>
+    {rendered.map((line, index) => <MathLine key={index} text={line} />)}
+  </div>;
 }
 
 function PhysicsVisual({visual, progress}) {
@@ -62,7 +87,7 @@ function Scene({scene, topic}) {
         <div style={{fontSize:25, color:palette.violet, textTransform:'uppercase', letterSpacing:3, marginBottom:18}}>{scene.label || 'KEY IDEA'}</div>
         <div style={{fontSize:34, lineHeight:1.15, fontWeight:700, marginBottom:22}}>{scene.title || topic}</div>
         <div style={{fontSize:23, lineHeight:1.4, color:palette.muted}}>{scene.explanation || ''}</div>
-        {scene.equation ? <div style={{marginTop:28}}><Equation text={scene.equation} /></div> : null}
+        {(scene.equations?.length || scene.equation) ? <div style={{marginTop:28}}><Equation lines={scene.equations || []} text={scene.equation} /></div> : null}
       </div>
     </FadeIn>
   </AbsoluteFill>;
