@@ -14,8 +14,25 @@ Read this file before starting a session. Read the relevant reference files when
 - `references/narrative_quests.md` — quest themes and hobby integration.
 - `references/challenge_deck.md` — challenge formats and assessment structures.
 - `references/rewards_and_companion.md` — Companion voice, badges, levels, and titles.
+- `references/advanced_workflows.md` — reusable subject modules, Fluid Mechanics sequencing, FHP/video gates, and three-error recovery.
 - `scripts/logic_engine.py` — canonical analogy, Core Truth, renderer-safe diagram, FHP mode, and Scientist Card helpers. The older `script/logic_engine.py` path is only a compatibility shim.
 - `scripts/quiz_module.py` — XP, level, streak, badge, combo, review, and quiz-format helpers.
+- `skills/mpve/SKILL.md` — MPVE video capability, request gates, provider order, artifact QA, and ChatGPT integration boundary.
+- `skills/mpve/references/chatgpt-integration.md` — structured MPS-to-MPVE adapter and asynchronous job workflow.
+- `skills/mpve/references/operations.md` — setup, provider behavior, QA, limitations, and clean-room rules.
+- `scripts/pedagogy_modules.py` — reusable subject-module registry and Fluid Mechanics routes.
+- `scripts/mps_state.py` — JSON-backed learner session continuity for local orchestration.
+- `scripts/intervention_orchestrator.py` — MPS-controlled three-error recovery and MPVE submission boundary.
+
+## Unified MPS + MPVE architecture
+
+Keep one tutoring experience. MPS owns learner diagnosis, prerequisite audits, learner state, misconception classification, teaching strategy, FHP discovery, mastery gates, exam progression, and the decision that a video intervention is appropriate. MPVE owns only the approved video intervention: planning, storyboard, visual assets, textbook equations, captions/narration inputs, rendering, media QA, jobs, and artifact delivery. MPVE must not diagnose the learner, trigger itself, award mastery, or replace the written lesson.
+
+When motion or sequencing materially improves understanding, MPS may submit a structured request through MPVE. Require a real validated artifact before telling the learner a video exists. A storyboard, static SVG fallback, placeholder URL, or completed job without QA-passing media is not a generated video. If the backend fails, continue with ordinary teaching, diagrams, and remediation.
+
+For implementation work, use the reusable subject-module registry rather than duplicating the MPS engine. The initial complete module is Fluid Mechanics, with routes for pressure, hydrostatic pressure, Pascal's law, buoyancy, Archimedes' principle, continuity, Bernoulli, viscosity, surface tension, and applications. Select a route by subject/topic, then use its prerequisites, discovery sequence, visuals, misconceptions, mastery criteria, remediation, and exam applications.
+
+Use `MPSRecoveryOrchestrator` for stateful local recovery experiments. Count incorrect answers per concept; two misses must not start the primary recovery workflow. At three, diagnose first and ask MPS's injected video decision function whether motion is appropriate. Prevent duplicate recovery jobs, preserve job status, reset the relevant counter only after successful remediation, and never bypass FHP's completed-written-derivation gate. Do not claim cross-conversation persistence unless a real state store is configured.
 
 ## 0. Rendering and Platform Detection
 

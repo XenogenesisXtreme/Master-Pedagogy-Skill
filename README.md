@@ -23,7 +23,8 @@ The skill is designed for agent clients that can load `SKILL.md` (including Clau
 - **Persistent-state specification:** a canonical `LearnerState` schema for preferences, exam goals, mastery evidence, misconceptions, review scheduling, and session continuity.
 - **Gamification:** XP, levels, streaks, combos, badges, Boss Battles and Rematches, branching paths, Scientist / Explorer Cards, and spaced review.
 - **Visual support:** renderer-safe Mermaid mind maps and skill trees, plus instructions to create and check actual diagrams when rendering is available.
-- **Optional video planning:** validated 16:9 storyboard generation with Cinematic as the default, explicit Whiteboard/Short/FHP overrides, learner-consented analogies, automatic video-profile inference, a credit-free local MP4 renderer, hosted-provider fallback, and SVG scene-card fallback for lessons where motion or sequence helps.
+- **Integrated video capability:** MPVE is attached to the existing MPS skill, with validated 16:9 storyboard generation, Cinematic as the default, explicit Whiteboard/Short/FHP overrides, learner-consented analogies, Remotion-first MP4 rendering, provider fallbacks, and real post-render QA.
+- **Reusable teaching workflows:** a subject-module registry with a complete Fluid Mechanics module, JSON-backed local learner-session continuity, and MPS-controlled three-error recovery orchestration.
 
 ## Exam profiles
 
@@ -61,8 +62,11 @@ Learners can request local changes at any point—for example, `hint`, `simpler`
 | [`script/logic_engine.py`](script/logic_engine.py) | Compatibility shim for older singular-path imports | Delegates to the canonical `scripts/` implementation |
 | [`scripts/quiz_module.py`](scripts/quiz_module.py) | XP, levels, streaks, badges, combo, challenge-format, review, and Socratic helpers | The host/agent orchestrates the session and stores learner state |
 | [`scripts/video_explainer.py`](scripts/video_explainer.py) | Provider-neutral storyboard construction and validation; deterministic SVG scene cards and a manifest as a fallback | Lesson planning contract; rendering is handled by the hybrid adapter |
-| [`scripts/hybrid_video.py`](scripts/hybrid_video.py) | Local Cinematic MP4 renderer using precise Pillow frames and FFmpeg; hosted adapter hook; SVG fallback | Local path is intentionally deterministic and physics-first; Piper narration is optional and can be attached by a host |
-| [`scripts/video_pipeline.py`](scripts/video_pipeline.py) | Runnable rolling-bodies demo using the local-first provider order | Requires Python Pillow and FFmpeg for local MP4 output |
+| [`scripts/hybrid_video.py`](scripts/hybrid_video.py) | Remotion-first Cinematic MP4 renderer; deterministic Pillow/FFmpeg fallback; hosted adapter hook; SVG fallback | Remotion requires Node dependencies; local output may be silent when narration/TTS is unavailable |
+| [`scripts/pedagogy_modules.py`](scripts/pedagogy_modules.py) | Reusable subject-module registry and complete Fluid Mechanics routes | The host still owns learner state and mastery decisions |
+| [`scripts/mps_state.py`](scripts/mps_state.py) | JSON-backed learner-session state store | Durable cross-conversation persistence requires a configured host store |
+| [`scripts/intervention_orchestrator.py`](scripts/intervention_orchestrator.py) | Three-error diagnosis/recovery orchestration with injected MPVE decision and submission boundaries | MPS decides whether video is appropriate; no hosted plugin deployment is included |
+| [`scripts/video_pipeline.py`](scripts/video_pipeline.py) | Runnable rolling-bodies demo using the Remotion-first provider order | Requires Node/Remotion, Python Pillow, FFmpeg, and ffprobe for the full path |
 | [`scripts/production_manifest.py`](scripts/production_manifest.py) | OpenMontage-inspired staged production manifest, provider decision log, and quality-gate contract | Reimplemented locally; no OpenMontage AGPL source is imported |
 | [`tests/`](tests/) | Unit tests for diagram/FHP helpers and storyboard/fallback behavior | Run with the command below |
 
