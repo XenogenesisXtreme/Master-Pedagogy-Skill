@@ -34,7 +34,7 @@ Defaults and gates:
 
 - `style`: `cinematic`
 - `aspect_ratio`: `16:9`
-- `duration`: 15 seconds; valid range 15–45 seconds
+- `duration`: 15 seconds by default; any positive whole number is accepted up to `MPVE_MAX_DURATION_SECONDS` (600 seconds by default)
 - Use learner interests only after MPS has asked permission. Set `analogy_consent: true` only with that permission and a learner-provided interest.
 - FHP/Floathead Physics requires a completed written derivation and `derived: true`; never use MPVE to replace the first-principles discovery protocol.
 - Preserve the supplied misconception and objective in the storyboard. Do not invent unsupported physics claims.
@@ -42,7 +42,7 @@ Defaults and gates:
 ## Required production workflow
 
 1. Receive a valid request from MPS; do not reinterpret the trigger or mastery decision.
-2. Validate required fields, profile/style, 16:9 aspect ratio, 15–45 second duration, analogy consent, and FHP derivation state.
+2. Validate required fields, profile/style, 16:9 aspect ratio, positive duration under the configured safety ceiling, analogy consent, and FHP derivation state.
 3. Create and persist the provider-neutral storyboard before rendering.
 4. Render through the provider boundary. The current local order is Remotion Cinematic → deterministic local Cinematic fallback → optional hosted adapter → checked SVG scene-card fallback.
 5. Preserve complete equation derivations. Render equations as textbook math: Greek glyphs, semantic subscripts/superscripts, fractions, and aligned lines—not raw LaTeX or underscore syntax.

@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import os
 import re
 import sys
 from dataclasses import asdict, dataclass, field
@@ -26,8 +27,8 @@ SUPPORTED_STYLES = ("cinematic", "whiteboard", "short", "fhp")
 SUPPORTED_PROFILES = ("General / Conceptual Learning", "NEET", "JEE", "IOQM", "NSEJS")
 DEFAULT_STYLE = "cinematic"
 DEFAULT_ASPECT_RATIO = "16:9"
-MIN_DURATION_SECONDS = 15
-MAX_DURATION_SECONDS = 45
+MIN_DURATION_SECONDS = 1
+MAX_DURATION_SECONDS = int(os.getenv("MPVE_MAX_DURATION_SECONDS", "600"))
 
 
 @dataclass
@@ -39,6 +40,7 @@ class Scene:
     equations: list[str] = field(default_factory=list)
     assets: list[str] = field(default_factory=list)
     validation_checks: list[str] = field(default_factory=list)
+    visual: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -93,8 +95,32 @@ def _split_narration(text: str, count: int) -> list[str]:
     return [" ".join(bucket) or fallback[min(index, len(fallback) - 1)] for index, bucket in enumerate(buckets)]
 
 
-def _scene_count(style: str) -> int:
-    return {"short": 3, "whiteboard": 5, "cinematic": 5, "fhp": 6}[style]
+def _scene_count(style: str, duration: int) -> int:
+    base = {"short": 3, "whiteboard": 5, "cinematic": 5, "fhp": 6}[style]
+    density = base + max(0, (duration - 1) // 15)
+    return max(1, min(duration, density))
+
+
+def _specialized_plan(topic: str, count: int) -> tuple[list[str], dict[str, str]] | None:
+    """Return a concrete visual plan for topics that need more than generic cards."""
+    lowered = topic.lower()
+    if "hydrostatic" not in lowered and not ("pressure" in lowered and "depth" in lowered):
+        return None
+    goals = [
+        "Isolate a thin fluid slab at depth h and pose the question: why is the lower face pushed harder?",
+        "Show pressure as force per area, the slab's area A, and the weight of the fluid column above it.",
+        "Track the column volume Ah, mass ρAh, and weight ρAhg as the source of the pressure difference.",
+        "Build the derivation from ΔP = F/A to ΔP = ρgh, then add surface pressure to obtain P = P₀ + ρgh.",
+        "Interpret P₀, ρ, g, and h and connect each symbol to the fluid-column diagram.",
+        "Animate the depth arrow and predict that doubling h doubles the added pressure.",
+        "Connect the model to a coding/game-dev debugging analogy: each added layer contributes another input to the total.",
+        "State the assumptions: static uniform fluid, constant density, and a consistent gravitational field.",
+        "Apply the model to a new depth and compare the result with the learner's prediction.",
+        "Recap the causal chain from column weight to pressure difference and return to the misconception.",
+        "Leave the learner with a transfer check and a clear mastery question.",
+    ]
+    phases = {str(index): "hydrostatic" for index in range(min(count, len(goals)))}
+    return goals[:count], phases
 
 
 def build_storyboard(
@@ -136,10 +162,10 @@ def build_storyboard(
     if analogy_consent and not interest:
         raise ValueError("analogy_consent=True requires a learner_interest value.")
     analogy_seed = build_analogy_seed(interest) if interest and analogy_consent else None
-    count = _scene_count(normalized_style)
-    total = int(duration or MIN_DURATION_SECONDS)
+    total = int(15 if duration is None else duration)
     if total < MIN_DURATION_SECONDS or total > MAX_DURATION_SECONDS:
-        raise ValueError(f"Explainer duration must be between {MIN_DURATION_SECONDS} and {MAX_DURATION_SECONDS} seconds.")
+        raise ValueError(f"Explainer duration must be between {MIN_DURATION_SECONDS} and {MAX_DURATION_SECONDS} seconds (configurable with MPVE_MAX_DURATION_SECONDS).")
+    count = _scene_count(normalized_style, total)
     base, remainder = divmod(total, count)
     narrations = _split_narration(narration, count)
     equation_list = [str(item).strip() for item in equations if str(item).strip()]
@@ -170,6 +196,18 @@ def build_storyboard(
             "Run dimensional and consistency checks.",
             "Apply the result and state its limits.",
         ]
+    specialized = _specialized_plan(topic, count)
+    visual_phases: dict[str, str] = {}
+    if specialized:
+        goals, visual_phases = specialized
+    if len(goals) < count:
+        goals = goals + [
+            "Work a fresh example and narrate each causal step.",
+            "Check units, limiting behavior, and the assumptions behind the model.",
+            "Summarize the result and ask the learner to transfer it to a new situation.",
+        ]
+    while len(goals) < count:
+        goals.append(goals[len(goals) % max(1, len(goals))])
     scenes: list[Scene] = []
     for index in range(count):
         checks = ["all labels readable", "visual matches narration"]
@@ -185,9 +223,10 @@ def build_storyboard(
             duration=base + (1 if index < remainder else 0),
             narration=scene_narration,
             visual_goal=goals[index],
-            equations=equation_list if index in (2, 3) else [],
+            equations=equation_list if (index in (2, 3) or (specialized and index == 4)) else [],
             assets=asset_list if index in (1, 2, 3) else [],
             validation_checks=checks,
+            visual={"kind": visual_phases.get(str(index), "") , "phase": str(index)} if visual_phases.get(str(index)) else {},
         ))
     storyboard = Storyboard(
         topic=_clean(topic, "Untitled topic"), objective=_clean(objective, "Understand the topic."),

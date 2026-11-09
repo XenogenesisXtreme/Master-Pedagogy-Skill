@@ -42,7 +42,7 @@ Before marking a job completed, inspect the actual MP4 with ffprobe and validate
 
 - decodable H.264 video stream
 - expected provider dimensions and frame rate
-- duration within the requested 15–45 second range
+- duration within the requested positive duration and configured `MPVE_MAX_DURATION_SECONDS` ceiling
 - representative frame extraction
 - caption sidecar timestamps when captions are supplied
 - artifact existence and non-zero size

@@ -2,9 +2,10 @@
 """Hybrid local-first video rendering for Master Pedagogy explainers.
 
 Provider order:
-1. Local deterministic cinematic renderer (Pillow + FFmpeg).
-2. An optional caller-supplied hosted renderer.
-3. Checked SVG scene-card fallback.
+1. MPS Remotion Cinematic renderer.
+2. Local deterministic cinematic renderer (Pillow + FFmpeg).
+3. An optional caller-supplied hosted renderer.
+4. Checked SVG scene-card fallback.
 
 The local path is intentionally physics-first rather than generative: equations,
 labels, vectors, and object motion are drawn from the validated storyboard so
@@ -208,7 +209,7 @@ def render_local_cinematic(storyboard: Storyboard, output_path: str | Path, work
             "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(output),
         ]
         subprocess.run(command, check=True)
-        return RenderResult("local-cinematic", output, total_seconds, storyboard.aspect_ratio, False, [], [], ["storyboard validation", "16:9 dimensions", "15-45 second duration", "H.264 encode"])
+        return RenderResult("local-cinematic", output, total_seconds, storyboard.aspect_ratio, False, [], [], ["storyboard validation", "16:9 dimensions", "configured positive duration", "H.264 encode"])
     finally:
         if temp_context:
             temp_context.cleanup()

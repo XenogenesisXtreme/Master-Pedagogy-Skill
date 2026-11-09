@@ -27,6 +27,12 @@ def _scene_visual(storyboard: Storyboard, assets: list[str]) -> dict[str, str]:
     return {"kind": "generic"}
 
 
+def _resolved_scene_visual(storyboard: Storyboard, scene) -> dict[str, str]:
+    if getattr(scene, "visual", None):
+        return dict(scene.visual)
+    return _scene_visual(storyboard, scene.assets)
+
+
 def storyboard_props(storyboard: Storyboard, caption_words: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     errors = validate_storyboard(storyboard)
     if errors:
@@ -43,10 +49,10 @@ def storyboard_props(storyboard: Storyboard, caption_words: list[dict[str, Any]]
             "explanation": scene.narration,
             "equation": scene.equations[0] if scene.equations else "",
             "equations": scene.equations,
-            "visual": _scene_visual(storyboard, scene.assets),
+            "visual": _resolved_scene_visual(storyboard, scene),
         })
         cursor += scene.duration
-    return {"topic": storyboard.topic, "profile": storyboard.exam_profile, "scenes": scenes, "captionWords": caption_words or []}
+    return {"topic": storyboard.topic, "profile": storyboard.exam_profile, "scenes": scenes, "captionWords": caption_words or [], "durationInFrames": sum(scene.duration for scene in storyboard.scenes) * 30}
 
 
 def render_remotion(storyboard: Storyboard, output_path: str | Path, *, caption_words: list[dict[str, Any]] | None = None, remotion_dir: str | Path = REMOTION_DIR) -> Path:

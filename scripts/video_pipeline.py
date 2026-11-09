@@ -37,7 +37,7 @@ def rolling_bodies_storyboard(duration: int, learner_interest: str | None, analo
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=Path("build/video-demo/rolling-bodies-hybrid.mp4"))
-    parser.add_argument("--duration", type=int, default=30, help="Explainer duration from 15 to 45 seconds.")
+    parser.add_argument("--duration", type=int, default=30, help="Positive explainer duration in seconds; bounded by MPVE_MAX_DURATION_SECONDS.")
     parser.add_argument("--learner-interest", default="coding and game development")
     parser.add_argument("--analogy-consent", action="store_true", default=True)
     args = parser.parse_args()

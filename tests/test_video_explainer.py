@@ -30,7 +30,7 @@ class VideoExplainerTests(unittest.TestCase):
         storyboard = self.make_storyboard()
         self.assertEqual(storyboard.style, "cinematic")
         self.assertEqual(storyboard.aspect_ratio, "16:9")
-        self.assertEqual(sum(scene.duration for scene in storyboard.scenes), MIN_DURATION_SECONDS)
+        self.assertEqual(sum(scene.duration for scene in storyboard.scenes), 15)
         self.assertEqual(validate_storyboard(storyboard), [])
 
     def test_profile_is_inferred_from_topic(self):
@@ -40,7 +40,7 @@ class VideoExplainerTests(unittest.TestCase):
 
     def test_learner_analogy_requires_consent_and_uses_interest_seed(self):
         with self.assertRaises(ValueError):
-            self.make_storyboard(learner_interest="coding", analogy_consent=True, duration=14)
+            self.make_storyboard(learner_interest="coding", analogy_consent=True, duration=0)
         storyboard = self.make_storyboard(learner_interest="coding and game development", analogy_consent=True, duration=30)
         self.assertEqual(storyboard.learner_interest, "coding and game development")
         self.assertIsNotNone(storyboard.analogy_seed)
@@ -48,8 +48,11 @@ class VideoExplainerTests(unittest.TestCase):
         self.assertIn("Learner-approved analogy seed", storyboard.scenes[1].narration)
         self.assertEqual(sum(scene.duration for scene in storyboard.scenes), 30)
 
-    def test_duration_range_is_15_to_45_seconds(self):
-        self.assertEqual(sum(scene.duration for scene in self.make_storyboard(duration=MAX_DURATION_SECONDS).scenes), 45)
+    def test_duration_accepts_arbitrary_positive_values_with_configurable_ceiling(self):
+        self.assertEqual(sum(scene.duration for scene in self.make_storyboard(duration=1).scenes), 1)
+        self.assertEqual(sum(scene.duration for scene in self.make_storyboard(duration=60).scenes), 60)
+        self.assertEqual(sum(scene.duration for scene in self.make_storyboard(duration=120).scenes), 120)
+        self.assertEqual(sum(scene.duration for scene in self.make_storyboard(duration=MAX_DURATION_SECONDS).scenes), MAX_DURATION_SECONDS)
         with self.assertRaises(ValueError):
             self.make_storyboard(duration=MIN_DURATION_SECONDS - 1)
         with self.assertRaises(ValueError):
@@ -74,6 +77,20 @@ class VideoExplainerTests(unittest.TestCase):
             scene_text = Path(scene_paths[0]).read_text(encoding="utf-8")
             self.assertIn("Newton", scene_text)
             self.assertNotIn("M80 760", scene_text)
+
+    def test_hydrostatic_pressure_gets_explanatory_visual_phases(self):
+        storyboard = self.make_storyboard(
+            topic="Hydrostatic Pressure",
+            objective="Derive how pressure changes with depth.",
+            narration="Imagine a fluid slab. Compare the forces. Derive delta pressure. Interpret every term. Predict at double depth.",
+            equations=["ΔP = F/A", "m = ρAh", "F = mg = ρAhg", "ΔP = ρgh", "P = P₀ + ρgh"],
+            duration=30,
+            learner_interest="coding and game development",
+            analogy_consent=True,
+        )
+        self.assertTrue(all(scene.visual["kind"] == "hydrostatic" for scene in storyboard.scenes))
+        self.assertIn("thin fluid slab", storyboard.scenes[0].visual_goal)
+        self.assertIn("P = P₀ + ρgh", storyboard.scenes[2].equations)
 
 
 if __name__ == "__main__":

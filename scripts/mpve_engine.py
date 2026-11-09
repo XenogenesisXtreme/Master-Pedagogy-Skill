@@ -20,7 +20,7 @@ from typing import Any
 from scripts.hybrid_video import render_hybrid, render_result_manifest
 from scripts.mpve_captions import CaptionWord, write_sidecars
 from scripts.mpve_qa import inspect_media, write_final_review
-from scripts.video_explainer import build_storyboard
+from scripts.video_explainer import MAX_DURATION_SECONDS, MIN_DURATION_SECONDS, build_storyboard
 
 JOB_STATES = {"queued", "processing", "completed", "failed"}
 
@@ -80,8 +80,8 @@ class VideoRequest:
             errors.append("topic is required")
         if not self.objective:
             errors.append("objective is required")
-        if self.duration < 15 or self.duration > 45:
-            errors.append("duration must be between 15 and 45 seconds")
+        if self.duration < MIN_DURATION_SECONDS or self.duration > MAX_DURATION_SECONDS:
+            errors.append(f"duration must be between {MIN_DURATION_SECONDS} and {MAX_DURATION_SECONDS} seconds")
         if self.aspect_ratio != "16:9":
             errors.append("aspect_ratio must be 16:9")
         if self.analogy_consent and not self.learner_interest:
@@ -119,11 +119,28 @@ def _default_narration(request: VideoRequest) -> str:
     )
 
 
+def _hydrostatic_narration(request: VideoRequest) -> str:
+    analogy = " Think of it like debugging a game system: each added layer contributes another input to the total, but the model still needs its assumptions." if request.analogy_consent and request.learner_interest else ""
+    return (
+        "Imagine a thin horizontal slab of fluid at depth h. Why does its lower face feel more pressure than its upper face? "
+        "Pressure is force per area, so compare the forces on the slab. The extra downward force comes from the weight of the fluid column above it. "
+        "That column has volume A h, mass rho A h, and weight rho A h g. Divide its weight by area A: delta P equals rho g h. "
+        "Add the pressure at the surface, P naught, and the result is P equals P naught plus rho g h. "
+        "P naught is surface pressure, rho is fluid density, g is gravitational acceleration, and h is depth. "
+        "Double the depth and the added pressure doubles, assuming a static uniform fluid." + analogy + " "
+        "Now predict the pressure change at twice the depth."
+    )
+
+
 def plan_storyboard(request: VideoRequest):
-    narration = request.narration or _default_narration(request)
+    topic_lower = request.topic.lower()
+    is_hydrostatic = "hydrostatic" in topic_lower or ("pressure" in topic_lower and "depth" in topic_lower)
+    narration = request.narration or (_hydrostatic_narration(request) if is_hydrostatic else _default_narration(request))
     equations = []
     if request.topic.lower().find("force") >= 0:
         equations.append("F = ma")
+    if is_hydrostatic:
+        equations.extend(["ΔP = F/A", "m = ρAh", "F = mg = ρAhg", "ΔP = ρgh", "P = P₀ + ρgh"])
     return build_storyboard(
         topic=request.topic,
         objective=request.objective,

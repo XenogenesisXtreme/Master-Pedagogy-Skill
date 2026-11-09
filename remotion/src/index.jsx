@@ -59,6 +59,8 @@ function PhysicsVisual({visual, progress}) {
   const x = 130 + progress * 380;
   const rolling = visual?.kind === 'rolling';
   const floatation = visual?.kind === 'floatation';
+  const hydrostatic = visual?.kind === 'hydrostatic';
+  if (hydrostatic) return <HydrostaticVisual visual={visual} progress={progress} />;
   if (floatation) return <div style={{position:'relative', width:620, height:430}}>
     <div style={{position:'absolute', left:30, right:20, top:250, height:170, background:'linear-gradient(#123c72,#0a2447)', borderTop:`4px solid ${palette.cyan}`, opacity:.9}} />
     <div style={{position:'absolute', left:220, top:180 - progress*15, width:180, height:120, borderRadius:'45% 45% 35% 35%', background:'#e8aa65', border:`5px solid ${palette.yellow}`, transform:`rotate(${progress*3-1.5}deg)`}} />
@@ -73,6 +75,37 @@ function PhysicsVisual({visual, progress}) {
     <div style={{position:'absolute', left:x+140, top:165-progress*50, color:palette.violet, fontSize:32}}>ω</div><div style={{position:'absolute', left:x-70, top:340-progress*50, color:palette.cyan, fontSize:30}}>v</div>
   </div>;
   return <div style={{position:'relative', width:620, height:430}}><div style={{position:'absolute', left:x, top:220-progress*60, width:120, height:120, borderRadius:'50%', background:'#173e62', border:`6px solid ${palette.cyan}`}} /><div style={{position:'absolute', left:x+150, top:210-progress*60, color:palette.cyan, fontSize:28}}>concept flow →</div></div>;
+}
+
+function HydrostaticVisual({visual, progress}) {
+  const phase = Number(visual?.phase || 0);
+  const depth = 100 + progress * 170;
+  const slabTop = 125 + progress * 155;
+  const showForces = phase >= 1;
+  const showCode = phase >= 4;
+  return <div style={{position:'relative', width:620, height:430}}>
+    {!showCode ? <>
+      <div style={{position:'absolute', left:48, top:54, width:270, height:330, border:`4px solid ${palette.cyan}`, borderTop:'0', borderRadius:'0 0 18px 18px', background:'linear-gradient(180deg, rgba(47,144,220,.62), rgba(10,36,71,.96))'}} />
+      <div style={{position:'absolute', left:48, top:54, width:270, height:4, background:palette.cyan}} />
+      <div style={{position:'absolute', left:82, top:72, color:palette.muted, fontSize:22}}>fluid surface</div>
+      <div style={{position:'absolute', left:126, top:slabTop, width:165, height:34, background:'rgba(255,209,102,.9)', border:`3px solid ${palette.yellow}`, boxShadow:`0 0 18px ${palette.yellow}`}} />
+      <div style={{position:'absolute', left:336, top:slabTop + 6, height:Math.max(70, depth), borderLeft:`3px dashed ${palette.violet}`}} />
+      <div style={{position:'absolute', left:350, top:slabTop + Math.max(70, depth)/2 - 12, color:palette.violet, fontSize:24}}>h</div>
+      <div style={{position:'absolute', left:110, top:slabTop - 48, color:palette.yellow, fontSize:23}}>thin slab, area A</div>
+      {showForces ? <>
+        <div style={{position:'absolute', left:175, top:slabTop - 82, color:palette.cyan, fontSize:27}}>↑ P₁A</div>
+        <div style={{position:'absolute', left:170, top:slabTop + 42, color:palette.red, fontSize:27}}>↓ P₂A</div>
+        <div style={{position:'absolute', left:205, top:slabTop + 72, color:palette.red, fontSize:25}}>↓ mg</div>
+      </> : null}
+      {phase === 0 ? <div style={{position:'absolute', left:90, top:350, color:palette.text, fontSize:22}}>More fluid above means more weight.</div> : null}
+      {phase === 3 ? <div style={{position:'absolute', left:80, top:350, color:palette.yellow, fontSize:22}}>Double h → double added pressure.</div> : null}
+    </> : <div style={{position:'absolute', left:30, top:52, width:540, height:300, border:`2px solid ${palette.violet}`, borderRadius:16, background:'rgba(16,26,53,.95)', padding:26, fontFamily:'Courier New, monospace', color:palette.text, fontSize:24, lineHeight:1.55}}>
+      <div style={{color:palette.cyan}}>function pressure(depth) {'{'}</div>
+      <div style={{paddingLeft:28, color:palette.yellow}}>return P0 + rho * g * depth</div>
+      <div style={{color:palette.cyan}}>{'}'}</div>
+      <div style={{marginTop:22, color:palette.muted, fontFamily:'Arial', fontSize:22}}>A useful analogy: each extra layer is another input contributing to the total. But the physics model still depends on the fluid assumptions.</div>
+    </div>}
+  </div>;
 }
 
 function Scene({scene, topic}) {
@@ -113,4 +146,4 @@ function MPVE({topic='Physics', profile='', scenes=[], captionWords=[]}) {
   </AbsoluteFill>;
 }
 
-export const RemotionRoot = () => <Composition id="MPVE" component={MPVE} durationInFrames={450} fps={30} width={1920} height={1080} defaultProps={{topic:'Physics', scenes:[]}} />;
+export const RemotionRoot = () => <Composition id="MPVE" component={MPVE} durationInFrames={450} fps={30} width={1920} height={1080} defaultProps={{topic:'Physics', scenes:[], durationInFrames:450}} calculateMetadata={({props}) => ({durationInFrames: props.durationInFrames || 450})} />;

@@ -50,14 +50,15 @@ class ProductionManifest:
 
 def make_manifest(storyboard: Storyboard, *, hosted_available: bool = False) -> ProductionManifest:
     decisions = [
-        ProviderDecision("local-cinematic", 1, shutil.which("ffmpeg") is not None, False, "Deterministic physics-first local renderer."),
-        ProviderDecision("hosted-provider", 2, hosted_available, False, "Optional external provider adapter."),
-        ProviderDecision("static-svg-fallback", 3, True, False, "Always-available checked scene-card fallback."),
+        ProviderDecision("remotion-cinematic", 1, shutil.which("node") is not None, False, "MPS-owned Remotion cinematic renderer."),
+        ProviderDecision("local-cinematic", 2, shutil.which("ffmpeg") is not None, False, "Deterministic physics-first local renderer."),
+        ProviderDecision("hosted-provider", 3, hosted_available, False, "Optional external provider adapter."),
+        ProviderDecision("static-svg-fallback", 4, True, False, "Always-available checked scene-card fallback."),
     ]
     return ProductionManifest(
         version="1.0",
         pipeline="master-pedagogy-cinematic-hybrid",
-        render_runtime="python-ffmpeg",
+        render_runtime="remotion-python-ffmpeg",
         storyboard=storyboard.to_dict(),
         provider_order=[decision.provider for decision in decisions],
         provider_decisions=decisions,
@@ -65,7 +66,7 @@ def make_manifest(storyboard: Storyboard, *, hosted_available: bool = False) -> 
         quality_gates=[
             "storyboard validation",
             "16:9 dimensions",
-            "15-45 second duration",
+            "configured positive duration",
             "playable H.264 output",
             "representative-frame-inspection",
             "mastery check present",

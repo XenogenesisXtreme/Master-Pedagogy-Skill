@@ -66,6 +66,7 @@ Learners can request local changes at any point—for example, `hint`, `simpler`
 | [`scripts/pedagogy_modules.py`](scripts/pedagogy_modules.py) | Reusable subject-module registry and complete Fluid Mechanics routes | The host still owns learner state and mastery decisions |
 | [`scripts/mps_state.py`](scripts/mps_state.py) | JSON-backed learner-session state store | Durable cross-conversation persistence requires a configured host store |
 | [`scripts/intervention_orchestrator.py`](scripts/intervention_orchestrator.py) | Three-error diagnosis/recovery orchestration with injected MPVE decision and submission boundaries | MPS decides whether video is appropriate; no hosted plugin deployment is included |
+| [`scripts/mpve_narration.py`](scripts/mpve_narration.py) | Scene-aligned narration turns and duration-aware FFmpeg audio muxing | A host supplies the TTS provider; API credentials remain server-side |
 | [`scripts/video_pipeline.py`](scripts/video_pipeline.py) | Runnable rolling-bodies demo using the Remotion-first provider order | Requires Node/Remotion, Python Pillow, FFmpeg, and ffprobe for the full path |
 | [`scripts/production_manifest.py`](scripts/production_manifest.py) | OpenMontage-inspired staged production manifest, provider decision log, and quality-gate contract | Reimplemented locally; no OpenMontage AGPL source is imported |
 | [`tests/`](tests/) | Unit tests for diagram/FHP helpers and storyboard/fallback behavior | Run with the command below |
@@ -114,11 +115,11 @@ python scripts/video_pipeline.py \
   --learner-interest "coding and game development"
 ```
 
-The provider order is **local deterministic renderer → optional hosted adapter → checked SVG fallback**. The local renderer produces a playable 16:9 H.264 MP4 with precise physics labels and motion. A host may add Piper narration when installed; if it is unavailable, the local output remains valid without narration rather than failing the lesson. The command also writes a `.production.json` artifact containing the stage contract, selected provider, required tools, and quality gates, plus a `.manifest.json` render result.
+The provider order is **Remotion Cinematic renderer → deterministic local renderer → optional hosted adapter → checked SVG fallback**. Remotion produces a playable 16:9 H.264 MP4 with textbook equations and scene-specific physics visuals; the local renderer remains the deterministic fallback. Narration is optional and may be attached by a configured host; if it is unavailable, the local output remains valid without narration rather than failing the lesson. The command also writes a `.production.json` artifact containing the stage contract, selected provider, required tools, and quality gates, plus a `.manifest.json` render result.
 
 The architecture follows useful OpenMontage patterns—staged artifacts, explicit provider routing, render reports, and post-render QA—but is implemented independently so this repository does not absorb OpenMontage's AGPL code or licensing obligations.
 
-Video storyboards default to `style="cinematic"`, enforce `aspect_ratio="16:9"`, and accept durations from 15 to 45 seconds. The video module infers a suitable profile from the topic when `exam_profile` is omitted; this is a presentation choice and does not replace full curriculum profile selection. If a learner has provided an interest, pass it as `learner_interest` and set `analogy_consent=True` only after asking permission to use it. FHP video storyboards require `derived=True` so a video supplements a completed written derivation rather than replacing it.
+Video storyboards default to `style="cinematic"`, enforce `aspect_ratio="16:9"`, and accept any positive whole-number duration up to `MPVE_MAX_DURATION_SECONDS` (600 seconds by default). Longer requests add teaching scenes instead of stretching a short clip. The video module infers a suitable profile from the topic when `exam_profile` is omitted; this is a presentation choice and does not replace full curriculum profile selection. If a learner has provided an interest, pass it as `learner_interest` and set `analogy_consent=True` only after asking permission to use it. FHP video storyboards require `derived=True` so a video supplements a completed written derivation rather than replacing it.
 
 ## Installation and activation
 
