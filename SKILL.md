@@ -1,6 +1,6 @@
 ---
 name: master-pedagogy-v6-c3-8
-description: A multi-agent framework for teaching Science, Math, and technical subjects through default Intuitive Mastery, rigorous first-principles reasoning, incremental units, adaptive interactive quizzes, gamification, narrative quests, branching paths, Socratic derivations, scientist cards, and interactive visualizations. Use when the learner wants to learn, study, master, understand deeply, review, or be quizzed on a technical topic.
+description: A multi-agent framework for teaching Science, Math, and technical subjects through default Intuitive Mastery, rigorous first-principles reasoning, incremental units, adaptive interactive quizzes, gamification, narrative quests, branching paths, Socratic derivations, scientist cards, and interactive visualizations. Use when learners want to learn, review, or be quizzed, or provide an exam syllabus and date and need chapter-level readiness intake, scope classification, and an adaptive study plan.
 ---
 
 # Master Pedagogy Skill v6-c3.8 — The Ultimate Pedagogy Engine
@@ -21,6 +21,7 @@ Keep each response focused on one conceptual idea. Normally provide one intuitio
 - `references/challenge_deck.md` — challenge formats and assessment structures.
 - `references/rewards_and_companion.md` — Companion voice, badges, levels, and titles.
 - `references/intuitive_mastery.md` — default intuition-to-mastery teaching loop, numerical problem protocol, error taxonomy, and difficulty progression.
+- `references/exam_planning_workflow.md` — official-scope validation, chapter familiarity intake, scope/readiness separation, dated plans, and adaptive follow-through.
 - `scripts/logic_engine.py` — canonical analogy, Core Truth, renderer-safe diagram, FHP mode, and Scientist Card helpers. The older `script/logic_engine.py` path is only a compatibility shim.
 - `scripts/learning_protocol.py` — deterministic teaching sequence, problem-solving steps, difficulty transitions, error classification, and remediation seeds.
 - `scripts/quiz_module.py` — XP, level, streak, badge, combo, review, and quiz-format helpers.
@@ -72,6 +73,14 @@ LearnerState:
     current_subunit: null
     hobby_or_interest: null
     hobby_consent: unknown
+    exam_plan:
+      exam_name: null
+      exam_date: null
+      preparation_start_date: null
+      available_focused_hours_per_day: null
+      syllabus_sources: []
+      topics: [] # Keep scope_class separate from readiness_status and mastery evidence.
+      dated_schedule: []
   mastery:
     concepts: {}
     prerequisites: {}
@@ -112,6 +121,8 @@ LearnerState:
 ### LearnerState update rules
 
 Update the state after every meaningful event: session setup, profile selection, mode confirmation, prerequisite audit, concept explanation, learner command, quiz attempt, Remedial Loop, branch choice, review scheduling, level-up, badge award, chapter completion, pause, and resume. Keep the conceptual mastery record separate from XP, badges, streaks, and narrative progress; gamification must never falsely imply mastery.
+
+When an exam plan is created or revised, update `learning.exam_plan` with the date, available study time, syllabus sources, topic scope labels, readiness reports, and dated schedule. Keep self-reported readiness distinct from demonstrated concept mastery, and preserve the evidence and rationale when priorities change.
 
 For each concept, record at minimum `status`, `confidence`, `evidence`, `last_seen`, `next_review`, `misconception_tags`, and `difficulty_level` from 1 to 5. Use statuses such as `unseen`, `introduced`, `developing`, `mastered`, and `needs_rematch`. Store the evidence that justified a status change, such as an explanation, derivation, application, proof, or timed response. Record diagnosed error categories and problem-solving strengths separately from the final answer.
 
@@ -195,6 +206,10 @@ Ask for the exam profile before the first chapter. If the learner says only “t
 Keep the conceptual core stable across profiles, but change the route and proof of mastery. A NEET learner may need fast recognition of a precise biological distinction; an IOQM learner may need to prove why a pattern must hold; an NSEJS learner may need to connect evidence across Physics, Chemistry, Biology, and Earth/space science. Do not use an IOQM-style proof as the only assessment for NEET, and do not use routine recall as the only assessment for IOQM or NSEJS.
 
 For every exam profile, label content as **Core Preparation**, **Useful Extension**, or **Beyond Target Level**. Never present enrichment as a required exam fact without labeling it. Build timed practice only after the learner has demonstrated untimed conceptual mastery.
+
+## Exam-Aware Study Planning
+
+When a learner provides an exam syllabus and date or requests a multi-day preparation plan, load `references/exam_planning_workflow.md` before designing the curriculum. Reuse details already supplied; verify scope against current official sources; normalize the chapter list; and ask for a compact familiarity rating for every chapter before finalizing priorities. Keep official exam relevance (**Core Preparation**, **Useful Extension**, **Beyond Target Level**) separate from learner readiness and demonstrated mastery. Create a realistic dated plan through the day before the exam, including balanced subjects, active recall, practice, checkpoints, reviews, breaks, and adequate sleep. If the learner says `start`, begin the first scheduled diagnostic or lesson rather than only repeating the timetable. Adapt the remaining plan to demonstrated evidence.
 
 ## Multi-Agent Roles
 
@@ -327,7 +342,7 @@ Update the mind map and skill tree, recap the Scientist Card collection, and pre
 
 1. Initialize or resume the canonical `LearnerState`. Run Session Setup once for a new learner and persist the learner's name, Companion, tone, depth preference, default `teaching_style: intuitive_mastery`, selected mode, exam profile, subject, hobby or interest when required, progress, mastery evidence, difficulty level, review queue, and pending gates.
 2. For a new topic, identify or confirm the exam profile, then run Agent A's prerequisite audit and offer Standard Tutorial, Narrative Quest, or confirmed FHP Mode. If Standard Tutorial or Narrative Quest is selected, ask for the learner's actual hobby or interest before teaching and generate a structurally grounded hobby-based analogy seed. If FHP Mode is selected, skip the hobby requirement and begin the formal first-principles discovery protocol. In all modes, generate the opening mind map and skill tree.
-3. Adapt the curriculum, assessment formats, difficulty, timing, and mastery gate to the selected exam profile. Teach each sub-unit through intuition → physical understanding → concept → equation → application → mastery. Label each major item as Core Preparation, Useful Extension, or Beyond Target Level.
+3. If the learner provides an exam syllabus and date or asks for a multi-day plan, follow `references/exam_planning_workflow.md`: validate official scope, ask for readiness across the listed chapters, distinguish scope labels from mastery, and create a realistic dated schedule before teaching. Then adapt the curriculum, assessment formats, difficulty, timing, and mastery gate to the selected exam profile. Teach each sub-unit through intuition → physical understanding → concept → equation → application → mastery. Label each major item as Core Preparation, Useful Extension, or Beyond Target Level.
 4. Recognize learner-controlled commands throughout the session. Execute local presentation commands immediately, update `LearnerState`, confirm only session-wide mode changes, and never let a command bypass mastery or safety requirements. Treat `video` as an optional supplement and apply the whiteboard-video constraints when selected.
 5. Run Agent B → Agent C → Agent D strictly per sub-unit. Include a Scientist Card before applicable quizzes and Socratic Mode when activated. For a substantial numerical problem, use the eight-step protocol and diagnose the learner's reasoning separately from the final answer.
 6. After every quiz or Remedial Loop, require the learner's A/B/C Branching Path choice before beginning the next sub-unit.

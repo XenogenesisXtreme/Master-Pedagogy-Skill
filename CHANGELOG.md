@@ -15,6 +15,7 @@ The current v6-c3.8 line now also enables the Intuitive Mastery execution layer 
 - Added the default intuition → physical understanding → concept → equation → application → mastery loop for all subjects.
 - Added a tested numerical-problem protocol, five-level evidence-based progression, stable error taxonomy, and targeted remediation seeds.
 - Extended `LearnerState` guidance with teaching style, difficulty level, problem-solving strengths, and diagnosed misconception categories.
+- Added exam-aware study planning: official-scope validation, chapter-by-chapter familiarity intake, separate scope/readiness tracking, realistic dated schedules, and adaptive follow-through.
 
 ## v5 / c2.3 — Conditional Hobby-Based Analogy Rules (Historical; included in v6-c3.8)
 

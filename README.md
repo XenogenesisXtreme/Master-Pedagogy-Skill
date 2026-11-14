@@ -20,6 +20,7 @@ The skill is designed for agent clients that can load `SKILL.md` (including Clau
 - **Three learning modes:** Standard Tutorial, Narrative Quest, and confirmed Floathead Physics (FHP) Mode.
 - **Adaptive mastery workflow:** prerequisite audits, incremental sub-units, quizzes, hints, remedial loops, support mode, and mastery gates.
 - **Default Intuitive Mastery:** intuition → physical understanding → concept → equation → application → mastery, with focused micro-lessons, transparent problem solving, error diagnosis, and five evidence-based difficulty levels.
+- **Exam-aware study planning:** official-scope checks, chapter-by-chapter familiarity intake, separate scope/readiness labels, and adaptive dated schedules built around the exam date.
 - **Learner controls:** `why`, `visual`, `analogy`, `formal`, `hint`, `simpler`, `harder`, `review`, `exam mode`, `recap`, `video`, and `fhp`.
 - **Persistent-state specification:** a canonical `LearnerState` schema for preferences, exam goals, mastery evidence, misconceptions, review scheduling, and session continuity.
 - **Gamification:** XP, levels, streaks, combos, badges, Boss Battles and Rematches, branching paths, Scientist / Explorer Cards, and spaced review.
@@ -73,10 +74,11 @@ Learners can request local changes at any point—for example, `hint`, `simpler`
 Read [`SKILL.md`](SKILL.md) first. For a new topic, the intended flow is:
 
 1. Initialize or resume learner state; choose an exam profile, subject, and learning mode.
-2. Audit prerequisites and agree on the learning route.
-3. Teach one sub-unit at a time, using appropriate visualizations and examples.
-4. Assess mastery, give hints or a remedial loop when needed, then offer the learner a branching choice.
-5. Record evidence and progress; schedule review and update the concept/skill maps.
+2. When an exam syllabus and date are supplied, verify scope, collect chapter familiarity, and build the dated study route using [`references/exam_planning_workflow.md`](references/exam_planning_workflow.md).
+3. Audit prerequisites and agree on the learning route.
+4. Teach one sub-unit at a time, using appropriate visualizations and examples.
+5. Assess mastery, give hints or a remedial loop when needed, then offer the learner a branching choice.
+6. Record evidence and progress; schedule review and update the concept/skill maps.
 
 Every subject uses Intuitive Mastery by default. Keep a unit small: introduce one observation, explain the concrete mechanism, formalize it, apply it, and ask for mastery evidence. For substantial numerical questions, use the eight-step problem-solving protocol and diagnose the reasoning error before remediation.
 
