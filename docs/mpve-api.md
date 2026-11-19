@@ -60,4 +60,6 @@ MPS owns the decision to call MPVE. A host adapter should:
 5. Resume MPS's written explanation and mastery check after delivery.
 6. Treat `failed` or fallback-only output as a recoverable capability issue, not as evidence of mastery.
 
+The repository's [`scripts/mpve_client.py`](../scripts/mpve_client.py) implements bounded HTTP retries, stable idempotency for a submission attempt, status polling, timeout handling, and result retrieval. Inject `MPVEClient.submit` as the orchestrator's `submit_video` callback; pass terminal job/result data to `handle_video_status` so failed jobs resume text remediation and completed artifacts resume the mastery check.
+
 The service currently stores jobs under `build/mpve/jobs`. Production deployments should replace this with a configured persistent storage and authenticated network boundary.

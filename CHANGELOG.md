@@ -12,6 +12,9 @@ This release names the merged exam-profile edition v6-c3.8 and aligns the skill 
 - Clarified that persistent learner storage and actual video generation require host-provided infrastructure or a provider backend.
 - Fixed combo progression so the 1.5x expiry no longer resets a continuing quick-clear streak before it can reach the four-clear 2.0x tier.
 - Fixed MPVE deduplication so failed requests can be retried; optional idempotency keys now deduplicate identical retries and reject reuse with different request content.
+- Added a standard-library MPVE HTTP client with bounded retries/timeouts, idempotent submission, job polling, and result retrieval.
+- Wired terminal job status into MPS recovery: failed or artifact-less jobs fall back to text, while a completed video still requires a separate mastery check.
+- Replaced MPVE integration pseudocode with a host-adapter example and documented the remaining authentication and durable-storage deployment requirements.
 
 ## v5 / c2.3 — Conditional Hobby-Based Analogy Rules (Historical; included in v6-c3.8)
 
