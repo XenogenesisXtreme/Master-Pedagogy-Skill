@@ -10,7 +10,7 @@ An adaptive, mastery-gated tutoring framework for Science, Mathematics, and tech
 
 The skill is designed for agent clients that can load `SKILL.md` (including Claude and Manus). **Available behavior depends on the host:** interactive widgets, cross-session persistence, rendered visuals, and generated video require supporting tools or application infrastructure.
 
-- **Website version:** [Gamified Learn](https://gamifiedlearn-5vbwad52.manus.space/) (requires a Manus account)
+- **Website version:** COMING SOON (or not)
 - **Main instructions:** [`SKILL.md`](SKILL.md)
 - **Change history:** [`CHANGELOG.md`](CHANGELOG.md)
 
