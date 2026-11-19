@@ -178,3 +178,7 @@ The `MPS-V5-c2.4-Exam-Profiles` branch was merged into `main`. The exam branch's
 ## License and credit
 
 MIT — see [`LICENSE`](LICENSE). This project builds on the original Master Pedagogy framework and preserves its prerequisite-audit and mastery-gating approach while adding adaptive learning modes, exam-aware guidance, and gamification.
+
+## Acknowledgments
+
+Thanks to Matt Abate for identifying and reporting the unreachable `ComboState` 2.0× tier and the MPVE failed-job retry issue on November 18, 2026. See [CONTRIBUTIONS.md](CONTRIBUTIONS.md) for details.
