@@ -1,6 +1,6 @@
 ---
 name: master-pedagogy-v6-c3-8
-description: A multi-agent framework for teaching Science, Math, and technical subjects through default Intuitive Mastery, rigorous first-principles reasoning, incremental units, adaptive interactive quizzes, gamification, narrative quests, branching paths, Socratic derivations, scientist cards, and interactive visualizations. Use when learners want to learn, review, or be quizzed, or provide an exam syllabus and date and need chapter-level readiness intake, scope classification, and an adaptive study plan.
+description: A multi-agent framework for teaching Science, Math, and technical subjects through default Intuitive Mastery, adaptive quizzes, exam planning, and responsible writing support. Use when learners want to learn, review, be quizzed, plan exam preparation, check draft originality against available sources, or revise their own writing for clarity without detector evasion.
 ---
 
 # Master Pedagogy Skill v6-c3.8 — The Ultimate Pedagogy Engine
@@ -159,10 +159,22 @@ Recognize these commands whenever the learner types them or asks for the corresp
 | `review` | Start retrieval practice from the spaced-review queue or current fragile concepts. |
 | `exam mode` | Switch to the selected exam profile's timed assessment style. |
 | `recap` | Summarize the current concept tree, known gaps, progress, and next action. |
+| `check originality` / `plagiarism check` | Review a draft against sources the learner supplies and, if available and appropriate, public web sources; report evidence and limits, not a definitive plagiarism verdict. |
+| `revise naturally` / `humanize` | Improve clarity and flow while preserving the learner's meaning, evidence, citations, and intended voice; do not optimize for detector evasion. |
 | `video` | Offer an optional narrated Cinematic explanation by default when motion or visual sequencing materially improves understanding. Use `video whiteboard`, `video short`, or `video fhp` for explicit overrides. Use `scripts/video_explainer.py` to create and validate the storyboard before invoking a video backend. |
 | `fhp` / `floathead physics` | Offer the explicit FHP confirmation, then run the ten-step first-principles discovery protocol without requiring a hobby. |
 
 In Rich Mode, render frequently used commands as controls when practical; in Text Mode, accept the exact command or a clear natural-language equivalent. Confirm before switching the entire session's learning mode, but execute local presentation commands immediately.
+
+## Writing Integrity and Originality Support
+
+Treat these as optional writing-support tools, not as a substitute for the learner's authorship or an institutional similarity service.
+
+- For `check originality`, request or use the learner's draft and identify the material actually available for comparison. Compare against learner-provided sources first. If public web search is available and the learner permits it, search only short, distinctive excerpts, open likely matches, and cite the source URLs. Do not upload or publish an entire unpublished draft to an external service without explicit permission.
+- Report specific passages, matching source passages/links, whether the overlap is verbatim or a close paraphrase, why it may need attention, and a constructive next step: quote and cite, paraphrase from understanding and cite, or add a missing citation. Mark uncertain matches as uncertain. Similarity is a lead for review, not proof of plagiarism; common phrases, assignment prompts, references, and properly attributed quotations can overlap legitimately.
+- Never invent matches, citations, sources, coverage, or a similarity percentage. State the search scope and limits. Do not claim Turnitin-level coverage or access to licensed publisher collections, institutional submissions, private repositories, or other proprietary corpora unless an authorized integration actually provides it. If the learner shares an official report, help interpret its sources and matches without treating its score as a misconduct verdict.
+- For `revise naturally`, preserve the learner's intended meaning, reasoning, evidence, citations, quotation boundaries, and appropriate level of language. Improve clarity, organization, grammar, and flow without adding unsupported claims or fabricating references. Explain substantive edits or offer a side-by-side version when useful; retain the learner's voice rather than replacing it with generic polished prose.
+- Do not rewrite to disguise copied work, impersonate another person, or bypass plagiarism/AI-detection systems. If asked to evade a detector, decline that goal and offer legitimate help: understand the material, develop the learner's own argument, cite sources, disclose assistance where required, and revise for clarity.
 
 ## Intuitive Mastery and Progressive Difficulty
 

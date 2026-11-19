@@ -16,6 +16,10 @@ The current v6-c3.8 line now also enables the Intuitive Mastery execution layer 
 - Added a tested numerical-problem protocol, five-level evidence-based progression, stable error taxonomy, and targeted remediation seeds.
 - Extended `LearnerState` guidance with teaching style, difficulty level, problem-solving strengths, and diagnosed misconception categories.
 - Added exam-aware study planning: official-scope validation, chapter-by-chapter familiarity intake, separate scope/readiness tracking, realistic dated schedules, and adaptive follow-through.
+- Added `check originality` for evidence-based comparison against learner-provided sources and, when permitted, publicly accessible sources, with explicit coverage limits and no fabricated similarity scores.
+- Added `revise naturally` to improve clarity while preserving learner meaning, evidence, citations, and voice; detector evasion and claims of Turnitin-equivalent coverage are explicitly out of scope.
+- Fixed combo progression so the 1.5x expiry no longer resets a continuing quick-clear streak before it can reach the four-clear 2.0x tier.
+- Fixed MPVE deduplication so failed requests can be retried; optional idempotency keys now deduplicate identical retries and reject reuse with different request content.
 
 ## v5 / c2.3 — Conditional Hobby-Based Analogy Rules (Historical; included in v6-c3.8)
 

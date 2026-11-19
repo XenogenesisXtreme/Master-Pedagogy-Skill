@@ -20,11 +20,14 @@ curl -X POST http://127.0.0.1:8787/videos \
     "mastery_check": "Predict what happens when displaced volume increases",
     "duration": 15,
     "style": "cinematic",
-    "aspect_ratio": "16:9"
+    "aspect_ratio": "16:9",
+    "idempotency_key": "floatation-lesson-1"
   }'
 ```
 
-Response status is `202` for a new job and `200` for a duplicate canonical request. The response contains `job.job_id`, `job.state`, `job.stage`, `job.progress`, and `job.request_fingerprint`.
+Response status is `202` for a new job and `200` for a duplicate canonical request. The response contains `job.job_id`, `job.state`, `job.stage`, `job.progress`, and `job.request_fingerprint`. The optional `idempotency_key` may be reused with the same canonical request; reusing it with different request content returns `400`.
+
+Submitting an identical request while its job is queued, processing, or completed returns that job. If it has failed, submitting it again creates a fresh job so transient renderer failures can be retried; this also works with the same idempotency key.
 
 ## Poll status
 

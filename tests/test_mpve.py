@@ -46,6 +46,16 @@ class MPVETests(unittest.TestCase):
                 self.assertTrue(duplicate_second)
                 self.assertEqual(first["job_id"], second["job_id"])
 
+    def test_idempotency_key_rejects_a_different_request(self):
+        with tempfile.TemporaryDirectory() as directory:
+            engine = MPVEEngine(directory)
+            payload = self.payload() | {"idempotency_key": "request-1"}
+            changed_payload = payload | {"objective": "A different objective."}
+            with patch("scripts.mpve_engine.render_hybrid", side_effect=self.fake_result):
+                engine.submit(payload)
+                with self.assertRaisesRegex(ValueError, "different request"):
+                    engine.submit(changed_payload)
+
     def test_successful_job_has_result_and_storyboard(self):
         with tempfile.TemporaryDirectory() as directory:
             engine = MPVEEngine(directory)
@@ -76,6 +86,45 @@ class MPVETests(unittest.TestCase):
                 current = engine.status(job["job_id"])
                 self.assertEqual(current["state"], "failed")
                 self.assertIn("ffmpeg unavailable", current["error"])
+
+    def test_failed_request_can_be_retried_with_same_idempotency_key(self):
+        with tempfile.TemporaryDirectory() as directory:
+            engine = MPVEEngine(directory)
+            payload = self.payload() | {"idempotency_key": "retry-1"}
+            render_calls = 0
+
+            def fail_once_then_succeed(storyboard, output, **kwargs):
+                nonlocal render_calls
+                render_calls += 1
+                if render_calls == 1:
+                    raise RuntimeError("temporary ffmpeg failure")
+                return self.fake_result(storyboard, output, **kwargs)
+
+            with patch("scripts.mpve_engine.render_hybrid", side_effect=fail_once_then_succeed):
+                first, duplicate_first = engine.submit(payload)
+                self.assertFalse(duplicate_first)
+                deadline = time.time() + 3
+                while time.time() < deadline:
+                    if engine.status(first["job_id"])["state"] == "failed":
+                        break
+                    time.sleep(0.01)
+                self.assertEqual(engine.status(first["job_id"])["state"], "failed")
+
+                retry, duplicate_retry = engine.submit(payload)
+                self.assertFalse(duplicate_retry)
+                self.assertNotEqual(first["job_id"], retry["job_id"])
+
+                deadline = time.time() + 3
+                while time.time() < deadline:
+                    if engine.status(retry["job_id"])["state"] == "completed":
+                        break
+                    time.sleep(0.01)
+                self.assertEqual(engine.status(retry["job_id"])["state"], "completed")
+                self.assertEqual(render_calls, 2)
+
+                duplicate, is_duplicate = engine.submit(payload)
+                self.assertTrue(is_duplicate)
+                self.assertEqual(duplicate["job_id"], retry["job_id"])
 
 
 if __name__ == "__main__":

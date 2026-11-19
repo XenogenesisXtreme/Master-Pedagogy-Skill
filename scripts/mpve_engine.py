@@ -76,6 +76,10 @@ class VideoRequest:
             errors.append("objective is required")
         if self.duration < 15 or self.duration > 45:
             errors.append("duration must be between 15 and 45 seconds")
+        if self.idempotency_key is not None and (
+            not isinstance(self.idempotency_key, str) or not self.idempotency_key.strip()
+        ):
+            errors.append("idempotency_key must be a non-empty string")
         if self.aspect_ratio != "16:9":
             errors.append("aspect_ratio must be 16:9")
         if self.analogy_consent and not self.learner_interest:
@@ -135,13 +139,29 @@ class JobStore:
         self._lock = threading.RLock()
         self._jobs: dict[str, dict[str, Any]] = {}
         self._fingerprints: dict[str, str] = {}
+        self._idempotency_keys: dict[str, tuple[str, str]] = {}
 
     def create(self, request: VideoRequest) -> tuple[dict[str, Any], bool]:
         fingerprint = request.fingerprint()
         with self._lock:
+            idempotency_key = request.idempotency_key
+            if idempotency_key:
+                prior = self._idempotency_keys.get(idempotency_key)
+                if prior:
+                    prior_fingerprint, prior_id = prior
+                    if prior_fingerprint != fingerprint:
+                        raise ValueError("idempotency_key has already been used with a different request")
+                    prior_job = self._jobs.get(prior_id)
+                    if prior_job and prior_job.get("state") != "failed":
+                        return prior_job, True
+
             existing_id = self._fingerprints.get(fingerprint)
             if existing_id:
-                return self._jobs[existing_id], True
+                existing_job = self._jobs.get(existing_id)
+                if existing_job and existing_job.get("state") != "failed":
+                    if idempotency_key:
+                        self._idempotency_keys[idempotency_key] = (fingerprint, existing_id)
+                    return existing_job, True
             job_id = f"mps-{uuid.uuid4().hex[:12]}"
             job = {
                 "job_id": job_id,
@@ -157,6 +177,8 @@ class JobStore:
             }
             self._jobs[job_id] = job
             self._fingerprints[fingerprint] = job_id
+            if idempotency_key:
+                self._idempotency_keys[idempotency_key] = (fingerprint, job_id)
             self._write(job)
             return job, False
 

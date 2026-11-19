@@ -21,7 +21,8 @@ The skill is designed for agent clients that can load `SKILL.md` (including Clau
 - **Adaptive mastery workflow:** prerequisite audits, incremental sub-units, quizzes, hints, remedial loops, support mode, and mastery gates.
 - **Default Intuitive Mastery:** intuition → physical understanding → concept → equation → application → mastery, with focused micro-lessons, transparent problem solving, error diagnosis, and five evidence-based difficulty levels.
 - **Exam-aware study planning:** official-scope checks, chapter-by-chapter familiarity intake, separate scope/readiness labels, and adaptive dated schedules built around the exam date.
-- **Learner controls:** `why`, `visual`, `analogy`, `formal`, `hint`, `simpler`, `harder`, `review`, `exam mode`, `recap`, `video`, and `fhp`.
+- **Writing integrity support:** source-scoped originality review and natural-voice revision that preserves citations; not a Turnitin-equivalent scan and never detector evasion.
+- **Learner controls:** `why`, `visual`, `analogy`, `formal`, `hint`, `simpler`, `harder`, `review`, `exam mode`, `recap`, `check originality`, `revise naturally`, `video`, and `fhp`.
 - **Persistent-state specification:** a canonical `LearnerState` schema for preferences, exam goals, mastery evidence, misconceptions, review scheduling, and session continuity.
 - **Gamification:** XP, levels, streaks, combos, badges, Boss Battles and Rematches, branching paths, Scientist / Explorer Cards, and spaced review.
 - **Visual support:** renderer-safe Mermaid mind maps and skill trees, plus instructions to create and check actual diagrams when rendering is available.
@@ -48,6 +49,8 @@ Content is labeled **Core Preparation**, **Useful Extension**, or **Beyond Targe
 - **Floathead Physics (FHP)** — a rigorous, time-intensive rediscovery path. It requires explicit learner confirmation and does not require a hobby analogy. Its protocol moves from observation and question-setting through assumptions, limiting cases, modeling, derivation, checks, application, and limitations.
 
 Learners can request local changes at any point—for example, `hint`, `simpler`, or `formal`. Commands change the teaching approach, not the underlying prerequisites or mastery requirements. `exam mode` applies the selected profile's assessment style; `video` offers an optional visual supplement when useful. Video defaults to Cinematic, while `video whiteboard`, `video short`, and `video fhp` remain explicit overrides.
+
+For writing support, `check originality` compares a draft only with sources that are actually available (learner-provided materials and, when permitted, public web sources); `revise naturally` improves clarity while preserving the learner's meaning, evidence, and voice. Neither command claims exhaustive database coverage or helps bypass detection systems.
 
 ## LearnerState and persistence
 

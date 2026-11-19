@@ -150,8 +150,12 @@ class ComboState:
         if self.remaining_boosted_uses > 0:
             self.remaining_boosted_uses -= 1
             if self.remaining_boosted_uses == 0:
+                expired_multiplier = self.current_multiplier
                 self.current_multiplier = 1.0
-                self.consecutive_quick_clears = 0
+                # Keep a 1.5x streak alive so clear 4 can activate the 2.0x tier.
+                # End the combo window after the 2.0x boost itself expires.
+                if expired_multiplier >= 2.0:
+                    self.consecutive_quick_clears = 0
                 return "expired"
             return f"x{self.current_multiplier}"
 
