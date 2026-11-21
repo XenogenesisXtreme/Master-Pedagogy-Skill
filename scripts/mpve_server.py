@@ -10,13 +10,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from scripts.mpve_engine import MPVEEngine
+from scripts.mpve_engine import JobStore, MPVEEngine
 
 
 class MPVEHandler(BaseHTTPRequestHandler):
@@ -68,23 +69,46 @@ class MPVEHandler(BaseHTTPRequestHandler):
         return
 
 
-def serve(host: str = "127.0.0.1", port: int = 8787, output_root: str = "build/mpve/jobs") -> None:
+def serve(
+    host: str = "127.0.0.1",
+    port: int = 8787,
+    output_root: str | None = None,
+    *,
+    data_dir: str | None = None,
+    workers: int = 1,
+) -> None:
+    if output_root:
+        jobs_root = Path(output_root)
+        persistent_root = jobs_root.parent
+    else:
+        persistent_root = Path(data_dir or os.environ.get("MPVE_DATA_DIR", "build/mpve"))
+        jobs_root = persistent_root / "jobs"
+    persistent_root.mkdir(parents=True, exist_ok=True)
+    jobs_root.mkdir(parents=True, exist_ok=True)
+    store = JobStore(jobs_root, db_path=persistent_root / "mpve.sqlite3")
+    engine = MPVEEngine(jobs_root, store=store, worker_count=workers)
+
     class Handler(MPVEHandler):
-        engine = MPVEEngine(output_root)
+        pass
+
+    Handler.engine = engine
     server = ThreadingHTTPServer((host, port), Handler)
-    print(f"MPVE listening on http://{host}:{port}", flush=True)
+    print(f"MPVE listening on http://{host}:{port} (data_dir={persistent_root}, workers={workers})", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         pass
     finally:
         server.server_close()
+        engine.close()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8787)
-    parser.add_argument("--output-root", default="build/mpve/jobs")
+    parser.add_argument("--data-dir", default=os.environ.get("MPVE_DATA_DIR", "build/mpve"), help="Persistent directory for the SQLite database and video jobs")
+    parser.add_argument("--output-root", help="Legacy override for the jobs directory; database is stored in its parent")
+    parser.add_argument("--workers", type=int, default=int(os.environ.get("MPVE_WORKERS", "1")))
     args = parser.parse_args()
-    serve(args.host, args.port, args.output_root)
+    serve(args.host, args.port, args.output_root, data_dir=args.data_dir, workers=args.workers)

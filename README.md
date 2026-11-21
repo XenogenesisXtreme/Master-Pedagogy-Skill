@@ -122,6 +122,10 @@ The architecture follows useful OpenMontage patterns—staged artifacts, explici
 
 Video storyboards default to `style="cinematic"`, enforce `aspect_ratio="16:9"`, and accept any positive whole-number duration up to `MPVE_MAX_DURATION_SECONDS` (600 seconds by default). Longer requests add teaching scenes instead of stretching a short clip. The video module infers a suitable profile from the topic when `exam_profile` is omitted; this is a presentation choice and does not replace full curriculum profile selection. If a learner has provided an interest, pass it as `learner_interest` and set `analogy_consent=True` only after asking permission to use it. FHP video storyboards require `derived=True` so a video supplements a completed written derivation rather than replacing it.
 
+### MPVE HTTP service
+
+The MPVE service persists job state, idempotency mappings, and its worker queue in SQLite, with generated artifacts stored under the configured data directory. Start it with `python scripts/mpve_server.py --data-dir /srv/mpve --workers 2`; see the [MPVE API and deployment guide](docs/mpve-api.md) for environment variables, restart recovery, and storage constraints. The default service is local and unauthenticated, so production deployments must add an authenticated network boundary and define artifact access and retention policies.
+
 ## Installation and activation
 
 Clone the repository:

@@ -10,9 +10,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import sqlite3
 import threading
 import time
 import uuid
+from contextlib import closing
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -163,75 +166,239 @@ def plan_storyboard(request: VideoRequest):
 
 
 class JobStore:
-    def __init__(self, root: str | Path):
+    """SQLite-backed job registry and durable queue; job folders hold artifacts."""
+
+    def __init__(self, root: str | Path, db_path: str | Path | None = None):
         self.root = Path(root)
         self.root.mkdir(parents=True, exist_ok=True)
+        self.db_path = Path(db_path) if db_path else self.root / "mpve.sqlite3"
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._lock = threading.RLock()
-        self._jobs: dict[str, dict[str, Any]] = {}
-        self._fingerprints: dict[str, str] = {}
-        self._idempotency_keys: dict[str, tuple[str, str]] = {}
+        self._initialize()
+
+    def _connect(self) -> sqlite3.Connection:
+        connection = sqlite3.connect(self.db_path, timeout=30)
+        connection.row_factory = sqlite3.Row
+        connection.execute("PRAGMA busy_timeout=30000")
+        connection.execute("PRAGMA foreign_keys=ON")
+        connection.execute("PRAGMA synchronous=FULL")
+        return connection
+
+    def _initialize(self) -> None:
+        with closing(self._connect()) as connection:
+            connection.execute("PRAGMA journal_mode=WAL")
+            connection.executescript(
+                """
+                CREATE TABLE IF NOT EXISTS jobs (
+                    job_id TEXT PRIMARY KEY,
+                    request_fingerprint TEXT NOT NULL,
+                    idempotency_key TEXT,
+                    state TEXT NOT NULL,
+                    created_at REAL NOT NULL,
+                    updated_at REAL NOT NULL,
+                    job_json TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS jobs_state_created
+                    ON jobs(state, created_at, job_id);
+                CREATE TABLE IF NOT EXISTS fingerprints (
+                    request_fingerprint TEXT PRIMARY KEY,
+                    job_id TEXT NOT NULL REFERENCES jobs(job_id)
+                );
+                CREATE TABLE IF NOT EXISTS idempotency_keys (
+                    idempotency_key TEXT PRIMARY KEY,
+                    request_fingerprint TEXT NOT NULL,
+                    job_id TEXT NOT NULL REFERENCES jobs(job_id)
+                );
+                """
+            )
+
+    @staticmethod
+    def _load_job(connection: sqlite3.Connection, job_id: str) -> dict[str, Any] | None:
+        row = connection.execute("SELECT job_json FROM jobs WHERE job_id = ?", (job_id,)).fetchone()
+        return json.loads(row["job_json"]) if row else None
 
     def create(self, request: VideoRequest) -> tuple[dict[str, Any], bool]:
         fingerprint = request.fingerprint()
-        with self._lock:
-            idempotency_key = request.idempotency_key
-            if idempotency_key:
-                prior = self._idempotency_keys.get(idempotency_key)
-                if prior:
-                    prior_fingerprint, prior_id = prior
-                    if prior_fingerprint != fingerprint:
-                        raise ValueError("idempotency_key has already been used with a different request")
-                    prior_job = self._jobs.get(prior_id)
-                    if prior_job and prior_job.get("state") != "failed":
-                        return prior_job, True
-            existing_id = self._fingerprints.get(fingerprint)
-            if existing_id:
-                existing_job = self._jobs.get(existing_id)
-                if existing_job and existing_job.get("state") != "failed":
+        idempotency_key = request.idempotency_key
+        with self._lock, closing(self._connect()) as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            try:
+                if idempotency_key:
+                    prior = connection.execute(
+                        """SELECT i.request_fingerprint, i.job_id, j.state
+                           FROM idempotency_keys AS i JOIN jobs AS j ON j.job_id = i.job_id
+                           WHERE i.idempotency_key = ?""",
+                        (idempotency_key,),
+                    ).fetchone()
+                    if prior:
+                        if prior["request_fingerprint"] != fingerprint:
+                            raise ValueError("idempotency_key has already been used with a different request")
+                        if prior["state"] != "failed":
+                            job = self._load_job(connection, prior["job_id"])
+                            connection.commit()
+                            return job, True
+
+                existing = connection.execute(
+                    """SELECT f.job_id, j.state FROM fingerprints AS f
+                       JOIN jobs AS j ON j.job_id = f.job_id
+                       WHERE f.request_fingerprint = ?""",
+                    (fingerprint,),
+                ).fetchone()
+                if existing and existing["state"] != "failed":
+                    job = self._load_job(connection, existing["job_id"])
                     if idempotency_key:
-                        self._idempotency_keys[idempotency_key] = (fingerprint, existing_id)
-                    return existing_job, True
-            job_id = f"mps-{uuid.uuid4().hex[:12]}"
-            job = {
-                "job_id": job_id,
-                "state": "queued",
-                "stage": "queued",
-                "progress": 0,
-                "request": request.canonical(),
-                "request_fingerprint": fingerprint,
-                "created_at": time.time(),
-                "updated_at": time.time(),
-                "error": None,
-                "result": None,
-            }
-            self._jobs[job_id] = job
-            self._fingerprints[fingerprint] = job_id
-            if idempotency_key:
-                self._idempotency_keys[idempotency_key] = (fingerprint, job_id)
+                        connection.execute(
+                            """INSERT INTO idempotency_keys(idempotency_key, request_fingerprint, job_id)
+                               VALUES (?, ?, ?) ON CONFLICT(idempotency_key) DO UPDATE SET
+                               request_fingerprint=excluded.request_fingerprint, job_id=excluded.job_id""",
+                            (idempotency_key, fingerprint, existing["job_id"]),
+                        )
+                    connection.commit()
+                    return job, True
+
+                now = time.time()
+                job_id = f"mps-{uuid.uuid4().hex[:12]}"
+                job = {
+                    "job_id": job_id,
+                    "state": "queued",
+                    "stage": "queued",
+                    "progress": 0,
+                    "request": request.canonical(),
+                    "request_fingerprint": fingerprint,
+                    "created_at": now,
+                    "updated_at": now,
+                    "error": None,
+                    "result": None,
+                }
+                connection.execute(
+                    """INSERT INTO jobs(job_id, request_fingerprint, idempotency_key, state,
+                       created_at, updated_at, job_json) VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                    (job_id, fingerprint, idempotency_key, "queued", now, now, json.dumps(job, ensure_ascii=False)),
+                )
+                connection.execute(
+                    """INSERT INTO fingerprints(request_fingerprint, job_id) VALUES (?, ?)
+                       ON CONFLICT(request_fingerprint) DO UPDATE SET job_id=excluded.job_id""",
+                    (fingerprint, job_id),
+                )
+                if idempotency_key:
+                    connection.execute(
+                        """INSERT INTO idempotency_keys(idempotency_key, request_fingerprint, job_id)
+                           VALUES (?, ?, ?) ON CONFLICT(idempotency_key) DO UPDATE SET
+                           request_fingerprint=excluded.request_fingerprint, job_id=excluded.job_id""",
+                        (idempotency_key, fingerprint, job_id),
+                    )
+                connection.commit()
+            except Exception:
+                connection.rollback()
+                raise
             self._write(job)
             return job, False
 
     def get(self, job_id: str) -> dict[str, Any] | None:
-        with self._lock:
-            return self._jobs.get(job_id)
+        with closing(self._connect()) as connection:
+            return self._load_job(connection, job_id)
 
     def update(self, job_id: str, **changes: Any) -> dict[str, Any]:
-        with self._lock:
-            job = self._jobs[job_id]
-            job.update(changes, updated_at=time.time())
+        with self._lock, closing(self._connect()) as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            try:
+                job = self._load_job(connection, job_id)
+                if job is None:
+                    raise KeyError(job_id)
+                job.update(changes, updated_at=time.time())
+                connection.execute(
+                    "UPDATE jobs SET state = ?, updated_at = ?, job_json = ? WHERE job_id = ?",
+                    (job["state"], job["updated_at"], json.dumps(job, ensure_ascii=False), job_id),
+                )
+                connection.commit()
+            except Exception:
+                connection.rollback()
+                raise
             self._write(job)
             return job
+
+    def claim_next(self) -> dict[str, Any] | None:
+        with self._lock, closing(self._connect()) as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            try:
+                row = connection.execute(
+                    "SELECT job_id, job_json FROM jobs WHERE state = 'queued' ORDER BY created_at, job_id LIMIT 1"
+                ).fetchone()
+                if not row:
+                    connection.commit()
+                    return None
+                job = json.loads(row["job_json"])
+                job.update(state="processing", stage="planning", progress=10, updated_at=time.time())
+                connection.execute(
+                    "UPDATE jobs SET state = ?, updated_at = ?, job_json = ? WHERE job_id = ? AND state = 'queued'",
+                    ("processing", job["updated_at"], json.dumps(job, ensure_ascii=False), row["job_id"]),
+                )
+                connection.commit()
+            except Exception:
+                connection.rollback()
+                raise
+            self._write(job)
+            return job
+
+    def requeue_interrupted_jobs(self) -> int:
+        """Return jobs left in processing to the durable queue after a restart."""
+        recovered: list[dict[str, Any]] = []
+        with self._lock, closing(self._connect()) as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            try:
+                rows = connection.execute("SELECT job_id, job_json FROM jobs WHERE state = 'processing'").fetchall()
+                for row in rows:
+                    job = json.loads(row["job_json"])
+                    job.update(state="queued", stage="queued", progress=0, error=None, updated_at=time.time())
+                    connection.execute(
+                        "UPDATE jobs SET state = 'queued', updated_at = ?, job_json = ? WHERE job_id = ?",
+                        (job["updated_at"], json.dumps(job, ensure_ascii=False), row["job_id"]),
+                    )
+                    recovered.append(job)
+                connection.commit()
+            except Exception:
+                connection.rollback()
+                raise
+            for job in recovered:
+                self._write(job)
+        return len(recovered)
 
     def _write(self, job: dict[str, Any]) -> None:
         path = self.root / job["job_id"] / "job.json"
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(job, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        temporary = path.with_name(f"{path.name}.{uuid.uuid4().hex}.tmp")
+        with temporary.open("w", encoding="utf-8") as stream:
+            stream.write(json.dumps(job, indent=2, ensure_ascii=False) + "\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
 
 
 class MPVEEngine:
-    def __init__(self, output_root: str | Path = "build/mpve/jobs", store: JobStore | None = None):
+    def __init__(
+        self,
+        output_root: str | Path = "build/mpve/jobs",
+        store: JobStore | None = None,
+        *,
+        worker_count: int = 1,
+        start_workers: bool = True,
+        recover_interrupted: bool = True,
+    ):
         self.output_root = Path(output_root)
+        self.output_root.mkdir(parents=True, exist_ok=True)
         self.store = store or JobStore(self.output_root)
+        if worker_count < 1:
+            raise ValueError("worker_count must be at least 1")
+        self._stop_event = threading.Event()
+        self._wake_event = threading.Event()
+        self._workers: list[threading.Thread] = []
+        if recover_interrupted:
+            self.store.requeue_interrupted_jobs()
+        if start_workers:
+            for index in range(worker_count):
+                worker = threading.Thread(target=self._worker_loop, name=f"mpve-worker-{index + 1}", daemon=True)
+                worker.start()
+                self._workers.append(worker)
 
     def submit(self, payload: dict[str, Any]) -> tuple[dict[str, Any], bool]:
         request = VideoRequest.from_dict(payload)
@@ -240,9 +407,29 @@ class MPVEEngine:
             raise ValueError("; ".join(errors))
         job, duplicate = self.store.create(request)
         if not duplicate:
-            thread = threading.Thread(target=self._run, args=(job["job_id"], request), daemon=True)
-            thread.start()
+            self._wake_event.set()
         return job, duplicate
+
+    def _worker_loop(self) -> None:
+        while not self._stop_event.is_set():
+            job = self.store.claim_next()
+            if job is None:
+                self._wake_event.wait(0.25)
+                self._wake_event.clear()
+                continue
+            try:
+                request = VideoRequest.from_dict(job["request"])
+                self._run(job["job_id"], request)
+            except Exception as exc:
+                self.store.update(job["job_id"], state="failed", stage="failed", progress=100, error=str(exc))
+
+    def close(self, *, wait: bool = True, timeout: float = 30.0) -> None:
+        self._stop_event.set()
+        self._wake_event.set()
+        if wait:
+            deadline = time.monotonic() + max(0.0, timeout)
+            for worker in self._workers:
+                worker.join(max(0.0, deadline - time.monotonic()))
 
     def _run(self, job_id: str, request: VideoRequest) -> None:
         try:

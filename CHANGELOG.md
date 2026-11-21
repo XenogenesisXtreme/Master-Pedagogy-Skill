@@ -15,6 +15,9 @@ This release names the merged exam-profile edition v6-c3.8 and aligns the skill 
 - Added a standard-library MPVE HTTP client with bounded retries/timeouts, idempotent submission, job polling, and result retrieval.
 - Wired terminal job status into MPS recovery: failed or artifact-less jobs fall back to text, while a completed video still requires a separate mastery check.
 - Replaced MPVE integration pseudocode with a host-adapter example and documented the remaining authentication and durable-storage deployment requirements.
+- **MPVE roadmap Step 2:** replaced in-memory job tracking with a SQLite-backed job registry, durable fingerprints/idempotency mappings, and an atomic worker queue; interrupted jobs are requeued after service restart, while per-job JSON mirrors are atomically written.
+- Added configurable persistent service storage (`--data-dir` / `MPVE_DATA_DIR`) and worker count (`--workers` / `MPVE_WORKERS`), documented restart and SQLite/WAL deployment constraints, and expanded concurrency/recovery tests.
+- Validation for this step: the focused MPVE suite passes **13/13** tests, the full repository suite passes **54/54** tests, and the configured HTTP service starts, serves its route, shuts down, and reopens the same SQLite database.
 
 ## v5 / c2.3 — Conditional Hobby-Based Analogy Rules (Historical; included in v6-c3.8)
 

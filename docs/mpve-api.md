@@ -6,6 +6,15 @@ MPVE is a local video engine connected to the existing Master Pedagogy Skill. St
 python scripts/mpve_server.py --host 127.0.0.1 --port 8787
 ```
 
+By default, MPVE stores its SQLite database at `build/mpve/mpve.sqlite3` and job artifacts under `build/mpve/jobs/`. Use an explicit persistent directory and worker count for deployments:
+
+```bash
+python scripts/mpve_server.py --host 127.0.0.1 --port 8787 \
+  --data-dir /srv/mpve --workers 2
+```
+
+The same settings are available through `MPVE_DATA_DIR` and `MPVE_WORKERS`. The data directory must be writable and remain available across service restarts. SQLite records are the source of truth; per-job `job.json` files are atomically replaced mirrors, and rendered media/caption artifacts live in each job's directory. On startup, jobs left in `processing` are returned to `queued` and may be rendered again. Keep this SQLite/WAL directory on local persistent storage and run one MPVE service instance per database; do not share it across hosts on a network filesystem. The legacy `--output-root` option still selects the jobs directory, with the database stored in its parent directory.
+
 ## Submit a video
 
 ```bash
@@ -62,4 +71,4 @@ MPS owns the decision to call MPVE. A host adapter should:
 
 The repository's [`scripts/mpve_client.py`](../scripts/mpve_client.py) implements bounded HTTP retries, stable idempotency for a submission attempt, status polling, timeout handling, and result retrieval. Inject `MPVEClient.submit` as the orchestrator's `submit_video` callback; pass terminal job/result data to `handle_video_status` so failed jobs resume text remediation and completed artifacts resume the mastery check.
 
-The service currently stores jobs under `build/mpve/jobs`. Production deployments should replace this with a configured persistent storage and authenticated network boundary.
+The default service is local and unauthenticated; production deployments still need an authenticated network boundary, storage monitoring, and an explicit artifact access/retention policy. Configure `--data-dir` (or `MPVE_DATA_DIR`) to a persistent local volume rather than relying on the default build directory.
