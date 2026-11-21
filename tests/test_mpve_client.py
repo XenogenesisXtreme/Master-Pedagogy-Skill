@@ -38,6 +38,14 @@ class MPVEClientTests(unittest.TestCase):
         self.assertTrue(posted["idempotency_key"])
         self.assertEqual(job, response["job"])
 
+    def test_configured_api_token_is_sent_as_bearer_authorization(self):
+        client = MPVEClient("http://localhost:8787", api_token="test-secret")
+        response = {"job": self.job(), "duplicate": False}
+        with patch("scripts.mpve_client.urlopen", return_value=FakeResponse(response)) as open_url:
+            client.submit({"topic": "Floatation", "objective": "Explain buoyancy"})
+        request = open_url.call_args.args[0]
+        self.assertEqual(request.get_header("Authorization"), "Bearer test-secret")
+
     def test_retry_reuses_the_same_idempotency_key(self):
         client = MPVEClient("http://localhost:8787", retry_backoff=0)
         unavailable = HTTPError("http://localhost:8787/videos", 503, "temporary", {}, io.BytesIO(b"retry"))
@@ -104,6 +112,8 @@ class MPVEClientTests(unittest.TestCase):
             MPVEClient("ftp://localhost:8787")
         with self.assertRaises(ValueError):
             MPVEClient("http://localhost:8787", request_timeout=0)
+        with self.assertRaisesRegex(ValueError, "requires HTTPS"):
+            MPVEClient("http://api.example.com:8787", api_token="secret")
 
 
 if __name__ == "__main__":

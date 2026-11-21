@@ -18,6 +18,9 @@ This release names the merged exam-profile edition v6-c3.8 and aligns the skill 
 - **MPVE roadmap Step 2:** replaced in-memory job tracking with a SQLite-backed job registry, durable fingerprints/idempotency mappings, and an atomic worker queue; interrupted jobs are requeued after service restart, while per-job JSON mirrors are atomically written.
 - Added configurable persistent service storage (`--data-dir` / `MPVE_DATA_DIR`) and worker count (`--workers` / `MPVE_WORKERS`), documented restart and SQLite/WAL deployment constraints, and expanded concurrency/recovery tests.
 - Validation for this step: the focused MPVE suite passes **13/13** tests, the full repository suite passes **54/54** tests, and the configured HTTP service starts, serves its route, shuts down, and reopens the same SQLite database.
+- **MPVE roadmap Step 3:** added bearer-token authentication, per-IP request throttling, strict JSON field/type/size limits, protected MP4 downloads with path confinement, and TLS-plus-a-minimum-32-character-token requirements for non-loopback binds; the client now supports tokens and rejects sending them over remote plaintext HTTP.
+- Added terminal request redaction (including legacy-row cleanup), SHA-256 idempotency-key storage with a versioned migration, 30-day configurable terminal-job/artifact retention, periodic orphan cleanup, and public response projections that omit learner payloads and host filesystem paths.
+- Validation for this step: focused MPVE engine/server/client suites pass **32/32** tests, the full repository suite passes **65/65** tests, and a live process smoke test verified token enforcement and fail-closed remote binding.
 
 ## v5 / c2.3 — Conditional Hobby-Based Analogy Rules (Historical; included in v6-c3.8)
 

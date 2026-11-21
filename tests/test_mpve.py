@@ -1,3 +1,6 @@
+import hashlib
+import json
+import sqlite3
 import tempfile
 import time
 import unittest
@@ -179,6 +182,41 @@ class MPVETests(unittest.TestCase):
             self.assertTrue(is_duplicate)
             self.assertEqual(replay["job_id"], original["job_id"])
 
+    def test_idempotency_key_is_hashed_at_rest(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "jobs"
+            raw_key = "learner-private-token"
+            store = JobStore(root)
+            job, _ = store.create(VideoRequest.from_dict(self.payload() | {"idempotency_key": raw_key}))
+            digest = hashlib.sha256(raw_key.encode("utf-8")).hexdigest()
+            with sqlite3.connect(root / "mpve.sqlite3") as connection:
+                mapped_key = connection.execute("SELECT idempotency_key FROM idempotency_keys").fetchone()[0]
+                job_key = connection.execute("SELECT idempotency_key FROM jobs WHERE job_id = ?", (job["job_id"],)).fetchone()[0]
+            self.assertEqual(mapped_key, digest)
+            self.assertEqual(job_key, digest)
+            self.assertNotIn(raw_key, (root / job["job_id"] / "job.json").read_text(encoding="utf-8"))
+
+    def test_legacy_plaintext_idempotency_mapping_migrates(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "jobs"
+            raw_key = "legacy-client-key"
+            request = VideoRequest.from_dict(self.payload() | {"idempotency_key": raw_key})
+            store = JobStore(root)
+            original, _ = store.create(request)
+            digest = hashlib.sha256(raw_key.encode("utf-8")).hexdigest()
+            with sqlite3.connect(root / "mpve.sqlite3") as connection:
+                connection.execute("UPDATE idempotency_keys SET idempotency_key = ?", (raw_key,))
+                connection.execute("UPDATE jobs SET idempotency_key = ? WHERE job_id = ?", (raw_key, original["job_id"]))
+                connection.execute("PRAGMA user_version = 0")
+
+            migrated = JobStore(root)
+            with sqlite3.connect(root / "mpve.sqlite3") as connection:
+                mapped_key = connection.execute("SELECT idempotency_key FROM idempotency_keys").fetchone()[0]
+            self.assertEqual(mapped_key, digest)
+            replay, duplicate = migrated.create(request)
+            self.assertTrue(duplicate)
+            self.assertEqual(replay["job_id"], original["job_id"])
+
     def test_failed_idempotent_job_can_be_retried_after_store_reopen(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory) / "jobs"
@@ -186,6 +224,7 @@ class MPVETests(unittest.TestCase):
             first_store = JobStore(root)
             failed, _ = first_store.create(request)
             first_store.update(failed["job_id"], state="failed", stage="failed", error="renderer failed")
+            self.assertNotIn("request", first_store.get(failed["job_id"]))
 
             reopened_store = JobStore(root)
             retried, duplicate = reopened_store.create(request)
@@ -194,6 +233,71 @@ class MPVETests(unittest.TestCase):
             replay, is_duplicate = reopened_store.create(request)
             self.assertTrue(is_duplicate)
             self.assertEqual(replay["job_id"], retried["job_id"])
+
+    def test_retention_purges_terminal_job_data_and_artifacts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "jobs"
+            store = JobStore(root)
+            completed_request = VideoRequest.from_dict(self.payload() | {"subtopic": "expired"})
+            completed, _ = store.create(completed_request)
+            store.update(completed["job_id"], state="completed", result={"artifact": str(root / completed["job_id"] / "video.mp4")})
+            artifact = root / completed["job_id"] / "video.mp4"
+            artifact.write_bytes(b"expired test artifact")
+            queued, _ = store.create(VideoRequest.from_dict(self.payload() | {"subtopic": "still queued"}))
+
+            removed = store.purge_expired(1, now=time.time() + 10)
+
+            self.assertEqual(removed, 1)
+            self.assertIsNone(store.get(completed["job_id"]))
+            self.assertFalse(artifact.parent.exists())
+            self.assertEqual(store.get(queued["job_id"])["state"], "queued")
+            retried, duplicate = store.create(completed_request)
+            self.assertFalse(duplicate)
+            self.assertNotEqual(retried["job_id"], completed["job_id"])
+
+    def test_startup_redacts_legacy_terminal_request_data(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "jobs"
+            store = JobStore(root)
+            request = VideoRequest.from_dict(self.payload() | {"learner_level": "private cohort"})
+            job, _ = store.create(request)
+            store.update(job["job_id"], state="completed", result={"artifact": None})
+            legacy = store.get(job["job_id"])
+            legacy["request"] = request.canonical()
+            with sqlite3.connect(root / "mpve.sqlite3") as connection:
+                connection.execute(
+                    "UPDATE jobs SET job_json = ? WHERE job_id = ?",
+                    (json.dumps(legacy), job["job_id"]),
+                )
+            store._write(legacy)
+
+            engine = MPVEEngine(root, store=JobStore(root), start_workers=False)
+            try:
+                persisted = engine.status(job["job_id"])
+                self.assertNotIn("request", persisted)
+                mirror = (root / job["job_id"] / "job.json").read_text(encoding="utf-8")
+                self.assertNotIn("private cohort", mirror)
+            finally:
+                engine.close()
+
+    def test_artifact_path_is_confined_to_completed_job_directory(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "jobs"
+            engine = MPVEEngine(root, start_workers=False)
+            try:
+                job, _ = engine.store.create(VideoRequest.from_dict(self.payload()))
+                artifact = root / job["job_id"] / "video.mp4"
+                artifact.write_bytes(b"valid test fixture")
+                engine.store.update(job["job_id"], state="completed", result={"artifact": str(artifact)})
+                self.assertEqual(engine.artifact_path(job["job_id"]), artifact.resolve())
+
+                outside = Path(directory) / "outside.mp4"
+                outside.write_bytes(b"must not be served")
+                engine.store.update(job["job_id"], result={"artifact": str(outside)})
+                with self.assertRaises(FileNotFoundError):
+                    engine.artifact_path(job["job_id"])
+            finally:
+                engine.close()
 
     def test_engine_requeues_interrupted_job_after_restart(self):
         with tempfile.TemporaryDirectory() as directory:

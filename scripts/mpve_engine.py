@@ -11,6 +11,8 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
+import shutil
 import sqlite3
 import threading
 import time
@@ -26,6 +28,10 @@ from scripts.mpve_qa import inspect_media, write_final_review
 from scripts.video_explainer import MAX_DURATION_SECONDS, MIN_DURATION_SECONDS, build_storyboard
 
 JOB_STATES = {"queued", "processing", "completed", "failed"}
+
+
+def _hash_idempotency_key(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
 @dataclass
@@ -211,6 +217,42 @@ class JobStore:
                 );
                 """
             )
+            schema_version = connection.execute("PRAGMA user_version").fetchone()[0]
+            if schema_version < 1:
+                connection.execute("BEGIN IMMEDIATE")
+                try:
+                    keys = {
+                        row["idempotency_key"]
+                        for row in connection.execute("SELECT idempotency_key FROM idempotency_keys")
+                    }
+                    keys.update(
+                        row["idempotency_key"]
+                        for row in connection.execute("SELECT idempotency_key FROM jobs WHERE idempotency_key IS NOT NULL")
+                    )
+                    for raw_key in keys:
+                        temporary = f"migrate-{uuid.uuid4().hex}"
+                        connection.execute(
+                            "UPDATE idempotency_keys SET idempotency_key = ? WHERE idempotency_key = ?",
+                            (temporary, raw_key),
+                        )
+                        connection.execute(
+                            "UPDATE jobs SET idempotency_key = ? WHERE idempotency_key = ?",
+                            (temporary, raw_key),
+                        )
+                        digest = _hash_idempotency_key(raw_key)
+                        connection.execute(
+                            "UPDATE idempotency_keys SET idempotency_key = ? WHERE idempotency_key = ?",
+                            (digest, temporary),
+                        )
+                        connection.execute(
+                            "UPDATE jobs SET idempotency_key = ? WHERE idempotency_key = ?",
+                            (digest, temporary),
+                        )
+                    connection.execute("PRAGMA user_version = 1")
+                    connection.commit()
+                except Exception:
+                    connection.rollback()
+                    raise
 
     @staticmethod
     def _load_job(connection: sqlite3.Connection, job_id: str) -> dict[str, Any] | None:
@@ -220,6 +262,7 @@ class JobStore:
     def create(self, request: VideoRequest) -> tuple[dict[str, Any], bool]:
         fingerprint = request.fingerprint()
         idempotency_key = request.idempotency_key
+        idempotency_digest = _hash_idempotency_key(idempotency_key) if idempotency_key else None
         with self._lock, closing(self._connect()) as connection:
             connection.execute("BEGIN IMMEDIATE")
             try:
@@ -228,7 +271,7 @@ class JobStore:
                         """SELECT i.request_fingerprint, i.job_id, j.state
                            FROM idempotency_keys AS i JOIN jobs AS j ON j.job_id = i.job_id
                            WHERE i.idempotency_key = ?""",
-                        (idempotency_key,),
+                        (idempotency_digest,),
                     ).fetchone()
                     if prior:
                         if prior["request_fingerprint"] != fingerprint:
@@ -251,7 +294,7 @@ class JobStore:
                             """INSERT INTO idempotency_keys(idempotency_key, request_fingerprint, job_id)
                                VALUES (?, ?, ?) ON CONFLICT(idempotency_key) DO UPDATE SET
                                request_fingerprint=excluded.request_fingerprint, job_id=excluded.job_id""",
-                            (idempotency_key, fingerprint, existing["job_id"]),
+                            (idempotency_digest, fingerprint, existing["job_id"]),
                         )
                     connection.commit()
                     return job, True
@@ -273,7 +316,7 @@ class JobStore:
                 connection.execute(
                     """INSERT INTO jobs(job_id, request_fingerprint, idempotency_key, state,
                        created_at, updated_at, job_json) VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                    (job_id, fingerprint, idempotency_key, "queued", now, now, json.dumps(job, ensure_ascii=False)),
+                    (job_id, fingerprint, idempotency_digest, "queued", now, now, json.dumps(job, ensure_ascii=False)),
                 )
                 connection.execute(
                     """INSERT INTO fingerprints(request_fingerprint, job_id) VALUES (?, ?)
@@ -285,7 +328,7 @@ class JobStore:
                         """INSERT INTO idempotency_keys(idempotency_key, request_fingerprint, job_id)
                            VALUES (?, ?, ?) ON CONFLICT(idempotency_key) DO UPDATE SET
                            request_fingerprint=excluded.request_fingerprint, job_id=excluded.job_id""",
-                        (idempotency_key, fingerprint, job_id),
+                        (idempotency_digest, fingerprint, job_id),
                     )
                 connection.commit()
             except Exception:
@@ -306,6 +349,8 @@ class JobStore:
                 if job is None:
                     raise KeyError(job_id)
                 job.update(changes, updated_at=time.time())
+                if job.get("state") in {"completed", "failed"}:
+                    job.pop("request", None)
                 connection.execute(
                     "UPDATE jobs SET state = ?, updated_at = ?, job_json = ? WHERE job_id = ?",
                     (job["state"], job["updated_at"], json.dumps(job, ensure_ascii=False), job_id),
@@ -363,6 +408,82 @@ class JobStore:
                 self._write(job)
         return len(recovered)
 
+    def redact_terminal_requests(self) -> int:
+        """Remove stored request payloads from terminal jobs, including pre-upgrade rows."""
+        redacted: list[dict[str, Any]] = []
+        with self._lock, closing(self._connect()) as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            try:
+                rows = connection.execute(
+                    "SELECT job_id, job_json FROM jobs WHERE state IN ('completed', 'failed')"
+                ).fetchall()
+                for row in rows:
+                    job = json.loads(row["job_json"])
+                    if "request" not in job:
+                        continue
+                    job.pop("request", None)
+                    connection.execute(
+                        "UPDATE jobs SET job_json = ? WHERE job_id = ?",
+                        (json.dumps(job, ensure_ascii=False), row["job_id"]),
+                    )
+                    redacted.append(job)
+                connection.commit()
+            except Exception:
+                connection.rollback()
+                raise
+            for job in redacted:
+                self._write(job)
+        return len(redacted)
+
+    def purge_expired(self, retention_seconds: float, *, now: float | None = None) -> int:
+        """Delete terminal job records and artifacts older than the retention window."""
+        if retention_seconds <= 0:
+            raise ValueError("retention_seconds must be positive")
+        cutoff = (time.time() if now is None else now) - retention_seconds
+        expired_ids: list[str] = []
+        with self._lock, closing(self._connect()) as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            try:
+                rows = connection.execute(
+                    "SELECT job_id FROM jobs WHERE state IN ('completed', 'failed') AND updated_at < ?",
+                    (cutoff,),
+                ).fetchall()
+                expired_ids = [row["job_id"] for row in rows]
+                if expired_ids:
+                    connection.execute(
+                        "DELETE FROM fingerprints WHERE job_id IN (SELECT job_id FROM jobs WHERE state IN ('completed', 'failed') AND updated_at < ?)",
+                        (cutoff,),
+                    )
+                    connection.execute(
+                        "DELETE FROM idempotency_keys WHERE job_id IN (SELECT job_id FROM jobs WHERE state IN ('completed', 'failed') AND updated_at < ?)",
+                        (cutoff,),
+                    )
+                    connection.execute(
+                        "DELETE FROM jobs WHERE state IN ('completed', 'failed') AND updated_at < ?",
+                        (cutoff,),
+                    )
+                connection.commit()
+            except Exception:
+                connection.rollback()
+                raise
+        root = self.root.resolve()
+        for job_id in expired_ids:
+            job_dir = (self.root / job_id).resolve()
+            try:
+                job_dir.relative_to(root)
+            except ValueError:
+                continue
+            if job_dir != root:
+                shutil.rmtree(job_dir, ignore_errors=True)
+        with closing(self._connect()) as connection:
+            live_ids = {row["job_id"] for row in connection.execute("SELECT job_id FROM jobs")}
+        for candidate in root.iterdir():
+            if not re.fullmatch(r"mps-[0-9a-f]{12}", candidate.name) or candidate.name in live_ids or candidate.is_symlink():
+                continue
+            if candidate.is_dir():
+                shutil.rmtree(candidate, ignore_errors=True)
+        return len(expired_ids)
+
     def _write(self, job: dict[str, Any]) -> None:
         path = self.root / job["job_id"] / "job.json"
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -383,22 +504,35 @@ class MPVEEngine:
         worker_count: int = 1,
         start_workers: bool = True,
         recover_interrupted: bool = True,
+        retention_days: int = 30,
+        cleanup_interval_seconds: float = 3600,
     ):
         self.output_root = Path(output_root)
         self.output_root.mkdir(parents=True, exist_ok=True)
         self.store = store or JobStore(self.output_root)
         if worker_count < 1:
             raise ValueError("worker_count must be at least 1")
+        if retention_days < 1:
+            raise ValueError("retention_days must be at least 1")
+        if cleanup_interval_seconds <= 0:
+            raise ValueError("cleanup_interval_seconds must be positive")
         self._stop_event = threading.Event()
         self._wake_event = threading.Event()
         self._workers: list[threading.Thread] = []
+        self._retention_seconds = retention_days * 24 * 60 * 60
+        self._cleanup_interval_seconds = cleanup_interval_seconds
+        self.store.redact_terminal_requests()
+        self.store.purge_expired(self._retention_seconds)
         if recover_interrupted:
             self.store.requeue_interrupted_jobs()
+        self._maintenance_thread: threading.Thread | None = None
         if start_workers:
             for index in range(worker_count):
                 worker = threading.Thread(target=self._worker_loop, name=f"mpve-worker-{index + 1}", daemon=True)
                 worker.start()
                 self._workers.append(worker)
+            self._maintenance_thread = threading.Thread(target=self._maintenance_loop, name="mpve-maintenance", daemon=True)
+            self._maintenance_thread.start()
 
     def submit(self, payload: dict[str, Any]) -> tuple[dict[str, Any], bool]:
         request = VideoRequest.from_dict(payload)
@@ -423,6 +557,10 @@ class MPVEEngine:
             except Exception as exc:
                 self.store.update(job["job_id"], state="failed", stage="failed", progress=100, error=str(exc))
 
+    def _maintenance_loop(self) -> None:
+        while not self._stop_event.wait(self._cleanup_interval_seconds):
+            self.store.purge_expired(self._retention_seconds)
+
     def close(self, *, wait: bool = True, timeout: float = 30.0) -> None:
         self._stop_event.set()
         self._wake_event.set()
@@ -430,6 +568,8 @@ class MPVEEngine:
             deadline = time.monotonic() + max(0.0, timeout)
             for worker in self._workers:
                 worker.join(max(0.0, deadline - time.monotonic()))
+            if self._maintenance_thread:
+                self._maintenance_thread.join(max(0.0, deadline - time.monotonic()))
 
     def _run(self, job_id: str, request: VideoRequest) -> None:
         try:
@@ -486,3 +626,24 @@ class MPVEEngine:
         if job["state"] != "completed":
             raise RuntimeError(f"job is {job['state']}; result is not available")
         return job
+
+    def artifact_path(self, job_id: str) -> Path:
+        """Return a completed MP4 only when it resolves inside its own job directory."""
+        job = self.status(job_id)
+        artifact = (job.get("result") or {}).get("artifact")
+        if job.get("state") != "completed" or not artifact:
+            raise FileNotFoundError("completed artifact is not available")
+        root = self.output_root.resolve(strict=True)
+        job_dir = (root / job_id).resolve(strict=True)
+        try:
+            job_dir.relative_to(root)
+        except ValueError as exc:
+            raise FileNotFoundError("job directory is outside the configured artifact root") from exc
+        path = Path(artifact).resolve(strict=True)
+        try:
+            path.relative_to(job_dir)
+        except ValueError as exc:
+            raise FileNotFoundError("artifact is outside its job directory") from exc
+        if path == job_dir or path.suffix.lower() != ".mp4" or not path.is_file():
+            raise FileNotFoundError("artifact is not a regular MP4 file")
+        return path

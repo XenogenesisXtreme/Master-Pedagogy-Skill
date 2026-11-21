@@ -124,7 +124,7 @@ Video storyboards default to `style="cinematic"`, enforce `aspect_ratio="16:9"`,
 
 ### MPVE HTTP service
 
-The MPVE service persists job state, idempotency mappings, and its worker queue in SQLite, with generated artifacts stored under the configured data directory. Start it with `python scripts/mpve_server.py --data-dir /srv/mpve --workers 2`; see the [MPVE API and deployment guide](docs/mpve-api.md) for environment variables, restart recovery, and storage constraints. The default service is local and unauthenticated, so production deployments must add an authenticated network boundary and define artifact access and retention policies.
+The MPVE service persists job state and its worker queue in SQLite, with generated artifacts stored under the configured data directory. It supports bearer authentication, rate/body/schema limits, TLS-required non-loopback binds, protected MP4 downloads, terminal-data redaction, and automatic artifact retention. Start a local instance with `python scripts/mpve_server.py --data-dir /srv/mpve --workers 2`; see the [MPVE API and deployment guide](docs/mpve-api.md) for the production configuration and storage constraints.
 
 ## Installation and activation
 

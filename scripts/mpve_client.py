@@ -2,7 +2,9 @@
 """Small, retry-safe HTTP client for the MPVE API."""
 from __future__ import annotations
 
+import ipaddress
 import json
+import os
 import time
 import uuid
 from collections.abc import Mapping
@@ -62,6 +64,7 @@ class MPVEClient:
         max_retries: int = 2,
         retry_backoff: float = 0.25,
         max_retry_backoff: float = 2.0,
+        api_token: str | None = None,
     ):
         parsed = urlsplit(base_url)
         if parsed.scheme not in {"http", "https"} or not parsed.netloc or parsed.query or parsed.fragment:
@@ -77,6 +80,16 @@ class MPVEClient:
         self.max_retries = max_retries
         self.retry_backoff = retry_backoff
         self.max_retry_backoff = max_retry_backoff
+        self.api_token = api_token if api_token is not None else os.environ.get("MPVE_API_TOKEN")
+        if self.api_token is not None and not self.api_token:
+            raise ValueError("api_token cannot be empty")
+        if self.api_token and parsed.scheme == "http":
+            try:
+                loopback = ipaddress.ip_address(parsed.hostname or "").is_loopback
+            except ValueError:
+                loopback = (parsed.hostname or "").lower() == "localhost"
+            if not loopback:
+                raise ValueError("api_token requires HTTPS for non-loopback MPVE hosts")
 
     def submit(self, payload: Mapping[str, Any]) -> dict[str, Any]:
         """Submit a request and return its job; safe to inject as submit_video."""
@@ -154,6 +167,8 @@ class MPVEClient:
     def _request_json(self, method: str, path: str, payload: dict[str, Any] | None = None) -> dict[str, Any]:
         data = None if payload is None else json.dumps(payload, ensure_ascii=False).encode("utf-8")
         headers = {"Accept": "application/json"}
+        if self.api_token:
+            headers["Authorization"] = f"Bearer {self.api_token}"
         if data is not None:
             headers["Content-Type"] = "application/json"
         request = Request(self.base_url + path, data=data, headers=headers, method=method)
